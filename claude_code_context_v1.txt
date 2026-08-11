@@ -1,0 +1,349 @@
+ ---
+  # Project Context: Smart Signage Board — Inventory Management System
+
+  ## 1. What this project is
+
+  A web application for managing the inventory of an electronics/display-signage
+  project: purchased electronic components (PCB parts), tools, panels, and a
+  damage log. It is built with **ASP.NET Core Razor Pages (.NET 8)** and uses a
+  **Google Spreadsheet as its database** (Google Sheets API v4, service-account
+  authentication). It is deployed to **Google Cloud App Engine (Standard)**.
+
+  The app has NO traditional database (no SQL Server/EF Core) — all persistence
+  goes through the Google Sheets API. There is also NO user authentication yet.
+
+  ## 2. Tech stack & packages
+
+  - ASP.NET Core 8 (Razor Pages), C# with nullable + implicit usings enabled
+  - `Google.Apis.Sheets.v4` 1.68.0.3525 (Sheets API client)
+  - `Microsoft.Extensions.Configuration.UserSecrets` 8.0.1 (local config only)
+  - Bootstrap 5.3.3 via CDN (no bundling/minification pipeline)
+  - jQuery validation via `_ValidationScriptsPartial` (stock Razor Pages partial)
+  - Project name: `InventoryManagement`; UserSecretsId: `SmartSignageInventory`
+
+  ## 3. Full source file tree (excluding bin/, obj/, .vs/)
+
+  ```
+  InventoryManagement.csproj
+  Program.cs
+  appsettings.json
+  app.yaml
+  README.md
+  Models/
+    InventoryItemBase.cs   (abstract base: shared fields + cell-parsing helpers)
+    PcbComponent.cs        (PCB_Inventory row, 13 columns, GST math)
+    Tool.cs                (Tools_Inventory row, 11 columns, "Available" stock)
+    PanelComponent.cs      (Panel_Inventory row, 11 columns)
+    DamageRecord.cs        (Damages_Components row, 9 columns)
+  Services/
+    GoogleSheetsService.cs (all Sheets API calls; the app's "database layer")
+  Pages/
+    Index.cshtml / Index.cshtml.cs                 (home dashboard, 4 counts)
+    Error.cshtml / Error.cshtml.cs                 (stock error page)
+    _ViewImports.cshtml, _ViewStart.cshtml
+    Shared/
+      _Layout.cshtml                               (navbar + TempData alert)
+      _ValidationScriptsPartial.cshtml
+    PCBInventory/
+      Index / Create / Edit / Delete (.cshtml + .cshtml.cs)
+    ToolsInventory/
+      Index / Create / Edit / Delete (.cshtml + .cshtml.cs)
+    PanelInventory/
+      Index / Create / Edit / Delete (.cshtml + .cshtml.cs)
+    Damage/
+      Report.cshtml / Report.cshtml.cs   (report damage: decrements stock + logs)
+      History.cshtml / History.cshtml.cs (read-only damage log + totals)
+  ```
+
+  ## 4. The "database": Google Spreadsheet schema
+
+  One spreadsheet, 4 tabs (header row is ROW 1; data starts at row 2).
+  The spreadsheet ID is provided at runtime (config), NOT hard-coded.
+
+  ### Tab `PCB_Inventory` (13 columns)
+  `Sl. No. | Category | Component Name | Total Quantity | Remaining | Invoice No. | Cost per Unit (₹) | Base Cost (₹) |
+  GST 18% (₹) | Total Cost (₹) | Supplier | Date of Purchase | Remarks`
+
+  ### Tab `Tools_Inventory` (11 columns)
+  `Sl. No. | Tool Name | Category | Total Quantity | Available | Invoice No. | Cost per Unit (₹) | Total Cost (₹) |
+  Supplier | Date of Purchase | Remarks`
+
+  ### Tab `Panel_Inventory` (11 columns)
+  `Sl. No. | Category | Component Name | Total Quantity | Remaining | Invoice No. | Cost per Unit (₹) | Total Cost (₹) |
+  Supplier | Date of Purchase | Remarks`
+
+  ### Tab `Damages_Components` (9 columns)
+  `Sl. No. | Date | Component Name | Category | Quantity Damaged | Reason for Damage | Invoice No. | Cost per Unit (₹) |
+  Remarks`
+
+  ## 5. Models (all in namespace `InventoryManagement.Models`)
+
+  ### `InventoryItemBase` (abstract, shared by the 3 inventory models)
+  Properties: `RowIndex` (1-based spreadsheet row, row 1 = header — doubles as
+  the entity ID used in edit/delete/damage URLs), `SlNo`, `TotalQuantity`
+  ([Range 1..999999]), `Remaining` ([Range 0..999999]), `InvoiceNo`, `CostPerUnit`
+  (decimal, [Range 0..99999999]), `TotalCost`, `Supplier`, `DateOfPurchase`
+  (kept as string), `Remarks`. Also: `const int LowStockThreshold = 5` and
+  `bool IsLowStock => Remaining < LowStockThreshold` (used to highlight low
+  stock in tables). Cell parsing helpers `Cell` / `CellInt` / `CellDec` handle
+  the Sheets API's quirks (numbers come back as double; empty trailing cells
+  are omitted; parse with InvariantCulture).
+
+  ### `PcbComponent : InventoryItemBase` — sheet `PCB_Inventory`, 13 columns
+  Extra props: `Category`, `ComponentName` (Required), `BaseCost`, `GstAmount`.
+  Column indexes are private consts (0-based) matching the header order.
+  `FromRow(row, rowIndex)` and `ToRow()` convert to/from sheet rows.
+  `RecalculateCosts()` (called on create AND edit, server-side, never trusted
+  from the form):
+  ```
+  BaseCost  = round(TotalQuantity × CostPerUnit, 2)
+  GstAmount = round(BaseCost × 0.18, 2)          // 18% GST
+  TotalCost = BaseCost + GstAmount
+  ```
+
+  ### `Tool : InventoryItemBase` — sheet `Tools_Inventory`, 11 columns
+  Props: `ToolName` (Required), `Category`. NOTE: the Tools sheet calls its stock
+  column "Available"; the model exposes `Available` as a property alias that
+  reads/writes the base `Remaining` property. `RecalculateCosts()`:
+  `TotalCost = round(TotalQuantity × CostPerUnit, 2)` (no GST).
+
+  ### `PanelComponent : InventoryItemBase` — sheet `Panel_Inventory`, 11 columns
+  Props: `Category`, `ComponentName` (Required). `RecalculateCosts()`:
+  `TotalCost = round(TotalQuantity × CostPerUnit, 2)` (no GST).
+
+  ### `DamageRecord` — sheet `Damages_Components`, 9 columns (read-only in UI)
+  Props: `RowIndex`, `SlNo`, `Date`, `ComponentName`, `Category`,
+  `QuantityDamaged`, `Reason`, `InvoiceNo`, `CostPerUnit`, `Remarks`.
+  Has `FromRow`/`ToRow` but NO `RecalculateCosts` — it is only written by the
+  damage-report flow, which copies values from the affected inventory item.
+
+  ## 6. `Services/GoogleSheetsService.cs` — the data layer
+
+  A single sealed class wrapping the Sheets v4 API. Registered as a **singleton**
+  in Program.cs. Key conventions (all code depends on these):
+  - All row indexes are **1-based and INCLUDE the header row** (row 1 = header).
+    A data item's RowIndex equals its literal sheet row number.
+  - Reads cap at `A1:Z1000` per tab.
+
+  Public API:
+  - `GetRowsAsync(sheetName)` → `IList<IList<object>>`, all rows incl. header.
+  - `AppendRowAsync(sheetName, row)` → appends with `InsertDataOption.INSERTROWS`,
+    `ValueInputOption.USERENTERED`; returns the new row's 1-based index (parsed
+    from the response's `UpdatedRange`, e.g. `"PCB_Inventory!A14:M14"` → 14).
+  - `UpdateRowAsync(sheetName, rowIndex, row)` → overwrites that exact row
+    (`values.update`, USERENTERED).
+  - `DeleteRowAsync(sheetName, rowIndex)` → batchUpdate `DeleteDimension` (ROWS,
+    sheetId resolved from the spreadsheet metadata) to physically delete the row,
+    THEN renumbers column A (Sl. No.) of all remaining rows 1..n via a second
+    `values.update`. (Consequence: deleting re-orders subsequent rows and changes
+    their RowIndexes — edit forms opened before a delete are protected by a
+    row-count guard in Edit.)
+  - `GetCellValueAsync(sheetName, rowIndex, columnIndex)` → reads one cell.
+    **Currently unused anywhere** (utility that could be used later).
+  - `_sheetIdCache`: ConcurrentDictionary<string,int> caching tab→sheetId
+    (needed for DeleteDimension).
+  - `_writeLock`: a `SemaphoreSlim(1,1)` **serializes ALL writes**. The
+    damage-report flow is a read-then-write sequence; the lock prevents two
+    concurrent requests from interleaving on the same spreadsheet.
+  - Auth: `LoadCredential(path)` prefers an explicit service-account JSON key
+    file (path from `GOOGLE_APPLICATION_CREDENTIALS` or config); falls back to
+    Application Default Credentials (available automatically on App Engine).
+    Scoped to `SheetsService.Scope.Spreadsheets`. `ApplicationName` is
+    "Smart-Signage-Inventory".
+
+  ## 7. `Program.cs` — startup & configuration
+
+  - Config priority: **environment variable → appsettings.json → User Secrets**.
+    Reads `SpreadsheetId` (env var `SpreadsheetId`, then
+    `Configuration["SpreadsheetId"]`) and credentials path (env
+    `GOOGLE_APPLICATION_CREDENTIALS`, then `Configuration["GoogleApplicationCredentials"]`).
+  - **Fails fast at startup** with a clear exception if `SpreadsheetId` is unset.
+  - `builder.Services.AddRazorPages()` + singleton `GoogleSheetsService`.
+  - ForwardedHeaders middleware configured for `XForwardedProto | XForwardedFor`
+    with KnownNetworks/KnownProxies cleared (App Engine terminates TLS at its
+    load balancer and forwards plain HTTP + X-Forwarded-* headers).
+  - Pipeline: `UseForwardedHeaders` → (in non-dev only) `UseExceptionHandler("/Error")`
+    → `UseHttpsRedirection` → `UseStaticFiles` → `UseRouting` →
+    `UseAuthorization` → `MapRazorPages` → `app.Run()`.
+
+  ## 8. Pages & button-level behavior
+
+  ### Home (`/`, `Pages/Index.cshtml` + `Index.cshtml.cs`)
+  - Dashboard with 4 cards (PCB / Tools / Panel / Damage), each showing a count
+    and a link into that section; plus a "Report Damage" button.
+  - Handler loads all 4 tab row-counts **in parallel** (`Task.WhenAll`); a
+    failing sheet degrades that count to 0 (try/catch per sheet). Count =
+    rows.Count − 1 (header).
+
+  ### Inventory sections (`/PCBInventory`, `/ToolsInventory`, `/PanelInventory`)
+  All three are identical in shape; the handler logic below is described for PCB
+  but Tools/Panel mirror it against their own models/sheets.
+
+  - **Index** (`OnGetAsync`): loads all rows, builds `List<T>` via
+    `FromRow(rows[i], i + 1)`. Renders a table (Sl. No., name, category,
+    quantities, costs, supplier, date, remarks, actions). Rows with
+    `IsLowStock` are visually highlighted (warning). Header has "Create New".
+  - **Create** (`OnPostAsync` on `Create.cshtml.cs`):
+    1. `ModelState.IsValid` check (DataAnnotations); invalid → return Page()
+       (form re-shown with errors).
+    2. `RecalculateCosts()` server-side.
+    3. `Remaining = TotalQuantity` (new stock is fully available).
+    4. `SlNo = (current data row count) + 1`.
+    5. `AppendRowAsync` → new row at the bottom of the tab.
+    6. `TempData["Success"]` message; redirect to `./Index`.
+  - **Edit** (`Edit.cshtml.cs`, route `?id=<RowIndex>`):
+    - GET: find row by id (`id > 0` and `id <= rows.Count`, else NotFound);
+      pre-fill the form.
+    - POST: `Component.RowIndex = id`; validate; **guard**: if
+      `id > rows.Count` → NotFound (protects against the row being deleted
+      while the form was open — prevents overwriting a different row);
+      `RecalculateCosts()`; `UpdateRowAsync(sheet, id, ToRow())`; TempData;
+      redirect to Index.
+  - **Delete** (`Delete.cshtml.cs`, route `?id=<RowIndex>`):
+    - GET: confirmation page showing the item (FindAsync, else NotFound).
+    - POST: `DeleteRowAsync(sheet, id)` (physical delete + renumber);
+      TempData "Component deleted. The remaining rows were re-numbered.";
+      redirect to Index.
+  - All three inventory models include `FromRow`/`ToRow` and their own
+    `RecalculateCosts` as described in section 5.
+
+  ### Report Damage (`/Damage/Report`, `Report.cshtml.cs` + `Report.cshtml`)
+  The most complex flow — **one form writes to TWO sheets and validates before
+  ANY write**:
+
+  - GET (`OnGetAsync(type, rowId)`): loads ALL three inventories in parallel
+    (`Task.WhenAll`); `InventoryType` defaults to `"pcb"` if `type` isn't
+    pcb/tools/panel; pre-selects a component when `rowId` is passed.
+  - Form fields: `InventoryType` (dropdown pcb/tools/panel), `RowIndex`
+    (three selects — one per inventory — all named `RowIndex`, only the active
+    one is enabled; each option carries `data-remaining` and shows
+    "Name · InvoiceNo (Remaining: N)"), `Quantity` ([Range 1..99999]),
+    `DamageDate` (optional date input), `Reason` (Required), `Remarks` (optional).
+    Small JS toggles which select is active as the type changes and displays a
+    live "Available stock: N unit(s)" hint.
+  - POST (`OnPostAsync`): reloads all inventories; validates ModelState; then
+    switches on `InventoryType`:
+    1. Find the item by `RowIndex` in the matching list — if missing → error
+       "may have been deleted" (no writes).
+    2. **Stock check**: `Quantity > Remaining/Available` → error
+       "Only N unit(s) in stock" (no writes).
+    3. Snapshot `originalRow = item.ToRow()`; decrement stock in memory;
+       `UpdateRowAsync(inventorySheet, RowIndex, ToRow())`.
+    4. Build a `DamageRecord` (Sl. No. = count+1; Date defaults to
+       `DateTime.Today.ToString("yyyy-MM-dd")` if blank; copies ComponentName,
+       Category, InvoiceNo, CostPerUnit from the inventory item).
+    5. `AppendRowAsync(Damages_Components, record.ToRow())` inside
+       **try/catch: if the append throws, restore `originalRow` back to the
+       inventory sheet, then rethrow** — keeps the two sheets consistent.
+    6. TempData success; redirect to `/Damage/History`.
+
+  ### Damage History (`/Damage/History`, `History.cshtml.cs`)
+  - Reads `Damages_Components`; renders records **newest first** (loop from last
+    row down to row 2).
+  - Computes totals over the whole log: `TotalUnitsDamaged` (sum of
+    QuantityDamaged) and `TotalValueLoss` (sum of QuantityDamaged × CostPerUnit),
+    shown as summary cards. Read-only — no create/edit/delete here.
+
+  ## 9. UI / layout details (`Pages/Shared/_Layout.cshtml`)
+
+  - Bootstrap 5.3.3 CSS+JS from jsDelivr CDN; dark navbar with links: Home, PCB,
+    Tools, Panels, Report Damage, Damage History; active link highlighted via a
+    `@functions` block comparing the current route page prefix.
+  - `TempData["Success"]` (string) is rendered as a green `alert-success` banner
+    at the top of `<main>` on every page — the standard way Create/Edit/Delete/
+    Report show confirmation messages.
+  - Footer: "Smart Signage Board Project · Inventory Management".
+  - Forms use tag helpers (`asp-for`, `asp-validation-for`) + the stock
+    `_ValidationScriptsPartial` (jQuery validation) for client-side checks.
+
+  ## 10. Configuration & deployment
+
+  ### Local development (from README)
+  ```powershell
+  dotnet user-secrets set SpreadsheetId "<spreadsheet-id>"
+  $env:GOOGLE_APPLICATION_CREDENTIALS = "C:\path\to\service-account-key.json"
+  dotnet run
+  ```
+  If the credentials env var is unset and no key file exists, the app falls back
+  to Application Default Credentials (e.g. `gcloud auth application-default login`).
+
+  ### Spreadsheet setup (from README)
+  1. Google Spreadsheet with EXACTLY the 4 tabs/headers from section 4.
+  2. Create a service account (GCP Console → IAM & Admin → Service Accounts),
+     generate a JSON key, share the spreadsheet with the service account email
+     as **Editor**.
+  3. Spreadsheet ID = the `<ID>` in the spreadsheet URL.
+
+  ### App Engine deployment (`app.yaml`)
+  - `runtime: aspnetcore`, `env: standard`, `instance_class: B1` (256 MB; README
+    suggests B2 if memory pressure).
+  - Service-account key mounted from Secret Manager as a read-only volume at
+    `/var/secrets/google` (secret id `SERVICE_ACCOUNT_KEY`; files in a secret
+    volume are named after the secret id).
+  - `env_variables`: `SpreadsheetId`, `ASPNETCORE_ENVIRONMENT=Production`,
+    `GOOGLE_APPLICATION_CREDENTIALS=/var/secrets/google/SERVICE_ACCOUNT_KEY`.
+  - Deploy: `gcloud app deploy app.yaml`. Note: the app.yaml currently contains
+    a literal `"REPLACE_WITH_YOUR_SPREADSHEET_ID"` placeholder.
+
+  ## 11. Design decisions & conventions (PRESERVE when extending)
+
+  1. **Spreadsheet row index IS the entity ID** (RowIndex, 1-based incl. header).
+     Do not introduce surrogate keys without migrating all URL params
+     (`?id=`) and the damage-report RowIndex flow.
+  2. **Costs are always computed server-side** via `RecalculateCosts()` on every
+     create/edit — never accepted from the form. PCB has GST 18%; Tools and
+     Panels do not.
+  3. **All writes go through the `_writeLock` semaphore** in
+     GoogleSheetsService. New write flows must also use the service's methods
+     (which lock internally), not raw API calls.
+  4. **Damage flow ordering**: validate stock → decrement inventory row → append
+     damage record → on append failure, roll back the decrement. Any new
+     multi-sheet flow should follow the same validate-first + rollback pattern.
+  5. **Renumbering on delete**: Sl. No. is rewritten 1..n after every delete.
+  6. **Config through env var → appsettings → User Secrets**; fail fast at
+     startup when `SpreadsheetId` is missing.
+  7. **Column indexes are private consts per model** matching each tab's header
+     order — if a spreadsheet header changes, update the consts AND the README
+     schema, and the `ToRow` order must match `FromRow`.
+  8. Dates are stored as plain strings (yyyy-MM-dd).
+
+  ## 12. Known limitations (explicitly documented in README)
+
+  - **No authentication** — anyone reaching the app can edit/delete inventory.
+    README recommends Identity-Aware Proxy (IAP) or adding auth before public use.
+  - Reads the full tab (`A1:Z1000`) on every page load — fine at current scale;
+    would need paging/querying if sheets grow.
+  - No audit trail for edits (only damage events are logged).
+  - Google Sheets API latency per call; the dashboard and Report page mitigate
+    with parallel `Task.WhenAll` reads.
+
+  ## 13. Current status
+
+  Fully implemented and working: all 4 inventory sections with
+  Create/Edit/Delete, low-stock highlighting, cost/GST computation, the
+  damage-report flow with stock validation and rollback, damage history with
+  totals, dashboard with counts, App Engine deployment config. The project has
+  been built (bin/obj exist, including a Release build). Unused-but-present:
+  `GetCellValueAsync`. No tests exist. No auth exists. No git repository is
+  initialized in the project folder.
+
+  ## 14. Suggested next steps (unconfirmed — decide with the user)
+
+  - Add authentication (ASP.NET Core Identity or Google OAuth) and/or IAP.
+  - Add tests (xUnit + mocking the service, or an integration test against a
+    scratch spreadsheet).
+  - Add edit/delete for damage records, or CSV/Excel export.
+  - Add search/filter/sorting on the inventory tables.
+  - Pagination for large sheets (beyond the A1:Z1000 cap).
+  - Move shared Create/Edit page code into a generic base page model
+    (there is notable duplication across the 3 inventory sections).
+
+  ---
+  That's everything the current codebase contains. A couple of notes:
+
+  - Section 11 is the important one for continuing work — those conventions are load-bearing (row-index-as-ID,
+  server-side cost math, the write lock, rollback).
+  - If you want, I can also save this as a file (e.g. CONTEXT.md or DEEPSEEK_CONTEXT.md) in the project folder so you can
+  attach it directly to DeepSeek instead of copy-pasting — just say the word.
+
+✻ Crunched for 1m 5s

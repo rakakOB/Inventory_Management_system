@@ -1,0 +1,13 @@
+@page
+@model InventoryManagement.Pages.ErrorModel
+@{
+    ViewData["Title"] = "Error";
+}
+
+<h1 class="h3 text-danger">Something went wrong.</h1>
+<p class="text-muted">An error occurred while processing your request. Please try again.</p>
+
+@if (Model.ShowRequestId)
+{
+    <p class="small text-muted">Request ID: @Model.RequestId</p>
+}

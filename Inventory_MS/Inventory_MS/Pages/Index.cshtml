@@ -1,0 +1,59 @@
+@page
+@model InventoryManagement.Pages.IndexModel
+@{
+    ViewData["Title"] = "Home";
+}
+
+<div class="d-flex justify-content-between align-items-end mb-4">
+    <div>
+        <h1 class="h3 mb-1">Inventory Dashboard</h1>
+        <p class="text-muted mb-0">Stock overview for the smart signage board project.</p>
+    </div>
+    <a class="btn btn-dark" asp-page="/Damage/Report">Report Damage</a>
+</div>
+
+<div class="row g-3">
+    <div class="col-md-6 col-xl-3">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">PCB Inventory</h5>
+                <div class="display-6 fw-semibold">@Model.PcbCount</div>
+                <p class="card-text text-muted small mt-2">Components with GST breakdown, costs and supplier details.</p>
+                <a class="btn btn-outline-dark btn-sm stretched-link" asp-page="/PCBInventory/Index">Open PCB Inventory</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-xl-3">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">Tools Inventory</h5>
+                <div class="display-6 fw-semibold">@Model.ToolsCount</div>
+                <p class="card-text text-muted small mt-2">Workshop and assembly tools with availability.</p>
+                <a class="btn btn-outline-dark btn-sm stretched-link" asp-page="/ToolsInventory/Index">Open Tools Inventory</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-xl-3">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">Panel Inventory</h5>
+                <div class="display-6 fw-semibold">@Model.PanelCount</div>
+                <p class="card-text text-muted small mt-2">Panels and panel-level components in stock.</p>
+                <a class="btn btn-outline-dark btn-sm stretched-link" asp-page="/PanelInventory/Index">Open Panel Inventory</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-xl-3">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">Damage Records</h5>
+                <div class="display-6 fw-semibold">@Model.DamageCount</div>
+                <p class="card-text text-muted small mt-2">Reported damaged items and the full history log.</p>
+                <a class="btn btn-outline-dark btn-sm stretched-link" asp-page="/Damage/History">Open Damage History</a>
+            </div>
+        </div>
+    </div>
+</div>

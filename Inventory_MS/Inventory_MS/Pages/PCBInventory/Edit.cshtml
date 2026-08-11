@@ -1,0 +1,102 @@
+@page
+@model InventoryManagement.Pages.PCBInventory.EditModel
+@{
+    ViewData["Title"] = "Edit PCB Component";
+}
+
+<h1 class="h3 mb-1">Edit PCB Component</h1>
+<p class="text-muted small mb-3">Base cost, GST (18%) and total cost are recalculated on save.</p>
+
+<form method="post" asp-route-id="@Model.Component.RowIndex">
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+    <div class="card mb-3">
+        <div class="card-header">Component details</div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label asp-for="Component.ComponentName" class="form-label"></label>
+                    <input asp-for="Component.ComponentName" class="form-control" />
+                    <span asp-validation-for="Component.ComponentName" class="text-danger"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Component.Category" class="form-label"></label>
+                    <input asp-for="Component.Category" class="form-control" />
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="Component.TotalQuantity" class="form-label"></label>
+                    <input asp-for="Component.TotalQuantity" class="form-control" type="number" min="1" />
+                    <span asp-validation-for="Component.TotalQuantity" class="text-danger"></span>
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="Component.Remaining" class="form-label"></label>
+                    <input asp-for="Component.Remaining" class="form-control" type="number" min="0" />
+                    <div class="form-text">Current stock; decreased automatically by damage reports.</div>
+                    <span asp-validation-for="Component.Remaining" class="text-danger"></span>
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="Component.CostPerUnit" class="form-label"></label>
+                    <input asp-for="Component.CostPerUnit" class="form-control" type="number" min="0" step="0.01" />
+                    <span asp-validation-for="Component.CostPerUnit" class="text-danger"></span>
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="Component.InvoiceNo" class="form-label"></label>
+                    <input asp-for="Component.InvoiceNo" class="form-control" />
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="Component.Supplier" class="form-label"></label>
+                    <input asp-for="Component.Supplier" class="form-control" />
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="Component.DateOfPurchase" class="form-label"></label>
+                    <input asp-for="Component.DateOfPurchase" class="form-control" type="date" />
+                </div>
+                <div class="col-12">
+                    <label asp-for="Component.Remarks" class="form-label"></label>
+                    <input asp-for="Component.Remarks" class="form-control" />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <h6 class="card-title">Cost summary</h6>
+            <div class="row text-center">
+                <div class="col-4">
+                    <div class="text-muted small">Base Cost</div>
+                    <div class="fw-semibold" id="previewBase">₹ @Model.Component.BaseCost.ToString("N2", CultureInfo.InvariantCulture)</div>
+                </div>
+                <div class="col-4">
+                    <div class="text-muted small">GST 18%</div>
+                    <div class="fw-semibold" id="previewGst">₹ @Model.Component.GstAmount.ToString("N2", CultureInfo.InvariantCulture)</div>
+                </div>
+                <div class="col-4">
+                    <div class="text-muted small">Total Cost</div>
+                    <div class="fw-semibold" id="previewTotal">₹ @Model.Component.TotalCost.ToString("N2", CultureInfo.InvariantCulture)</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-dark">Save Changes</button>
+    <a class="btn btn-outline-secondary" asp-page="Index">Cancel</a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        function recalc() {
+            const qty = parseFloat(document.getElementById('Component_TotalQuantity').value) || 0;
+            const unit = parseFloat(document.getElementById('Component_CostPerUnit').value) || 0;
+            const base = qty * unit;
+            const gst = Math.round(base * 0.18 * 100) / 100;
+            document.getElementById('previewBase').textContent = '₹ ' + base.toFixed(2);
+            document.getElementById('previewGst').textContent = '₹ ' + gst.toFixed(2);
+            document.getElementById('previewTotal').textContent = '₹ ' + (base + gst).toFixed(2);
+        }
+        document.getElementById('Component_TotalQuantity').addEventListener('input', recalc);
+        document.getElementById('Component_CostPerUnit').addEventListener('input', recalc);
+        recalc();
+    </script>
+}

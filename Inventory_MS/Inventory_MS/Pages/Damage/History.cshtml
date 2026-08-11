@@ -1,0 +1,78 @@
+@page
+@model InventoryManagement.Pages.Damage.HistoryModel
+@{
+    ViewData["Title"] = "Damage History";
+}
+
+<h1 class="h3 mb-3">Damage History</h1>
+
+<div class="row g-3 mb-3">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <div class="text-muted small">Damage Records</div>
+                <div class="fs-4 fw-semibold">@Model.Records.Count</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <div class="text-muted small">Total Units Damaged</div>
+                <div class="fs-4 fw-semibold">@Model.TotalUnitsDamaged</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <div class="text-muted small">Estimated Value Lost</div>
+                <div class="fs-4 fw-semibold">₹ @Model.TotalValueLoss.ToString("N2", CultureInfo.InvariantCulture)</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-striped align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Sl. No.</th>
+                        <th>Date</th>
+                        <th>Component Name</th>
+                        <th>Category</th>
+                        <th class="text-end">Qty Damaged</th>
+                        <th>Reason for Damage</th>
+                        <th>Invoice No.</th>
+                        <th class="text-end">Cost/Unit</th>
+                        <th>Remarks</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Records.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="9" class="text-center text-muted py-4">No damage records yet.</td>
+                        </tr>
+                    }
+                    @foreach (var r in Model.Records)
+                    {
+                        <tr>
+                            <td>@r.SlNo</td>
+                            <td>@r.Date</td>
+                            <td class="fw-medium">@r.ComponentName</td>
+                            <td>@r.Category</td>
+                            <td class="text-end text-danger fw-semibold">@r.QuantityDamaged</td>
+                            <td>@r.Reason</td>
+                            <td>@r.InvoiceNo</td>
+                            <td class="text-end">₹ @r.CostPerUnit.ToString("N2", CultureInfo.InvariantCulture)</td>
+                            <td>@r.Remarks</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

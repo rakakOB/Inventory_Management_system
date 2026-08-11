@@ -1,0 +1,73 @@
+@page
+@model InventoryManagement.Pages.PanelInventory.IndexModel
+@{
+    ViewData["Title"] = "Panel Inventory";
+}
+
+<div class="d-flex justify-content-between align-items-end mb-3">
+    <div>
+        <h1 class="h3 mb-1">Panel Inventory</h1>
+        <p class="text-muted small mb-0">
+            @Model.Components.Count component(s) &middot; rows highlighted red are low on stock (Remaining &lt; 5).
+        </p>
+    </div>
+    <a class="btn btn-dark" asp-page="Create">+ Add Component</a>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Sl. No.</th>
+                        <th>Category</th>
+                        <th>Component Name</th>
+                        <th class="text-end">Total Qty</th>
+                        <th class="text-end">Remaining</th>
+                        <th>Invoice No.</th>
+                        <th class="text-end">Cost/Unit</th>
+                        <th class="text-end">Total Cost</th>
+                        <th>Supplier</th>
+                        <th>Date</th>
+                        <th>Remarks</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Components.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="12" class="text-center text-muted py-4">No components found. Add the first one.</td>
+                        </tr>
+                    }
+                    @foreach (var item in Model.Components)
+                    {
+                        <tr class="@(item.IsLowStock ? "table-danger" : "")">
+                            <td>@item.SlNo</td>
+                            <td>@item.Category</td>
+                            <td class="fw-medium">@item.ComponentName</td>
+                            <td class="text-end">@item.TotalQuantity</td>
+                            <td class="text-end">
+                                <span class="@(item.IsLowStock ? "text-danger fw-bold" : "")">@item.Remaining</span>
+                            </td>
+                            <td>@item.InvoiceNo</td>
+                            <td class="text-end">₹ @item.CostPerUnit.ToString("N2", CultureInfo.InvariantCulture)</td>
+                            <td class="text-end fw-semibold">₹ @item.TotalCost.ToString("N2", CultureInfo.InvariantCulture)</td>
+                            <td>@item.Supplier</td>
+                            <td>@item.DateOfPurchase</td>
+                            <td>@item.Remarks</td>
+                            <td class="text-end">
+                                <div class="btn-group btn-group-sm">
+                                    <a class="btn btn-outline-secondary" asp-page="Edit" asp-route-id="@item.RowIndex">Edit</a>
+                                    <a class="btn btn-outline-danger" asp-page="Delete" asp-route-id="@item.RowIndex">Delete</a>
+                                    <a class="btn btn-outline-dark" asp-page="/Damage/Report" asp-route-type="panel" asp-route-rowId="@item.RowIndex">Damage</a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
