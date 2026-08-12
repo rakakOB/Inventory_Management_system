@@ -1,0 +1,59 @@
+@page
+@model InventoryManagement.Pages.Master.CreateModel
+@{
+    ViewData["Title"] = "Create Master Item";
+}
+
+<h1 class="h3 mb-1">Create Master Item</h1>
+<p class="text-muted small mb-3">The unique code is generated automatically from the selected category.</p>
+
+<form method="post">
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label asp-for="Item.ComponentName" class="form-label"></label>
+                    <input asp-for="Item.ComponentName" class="form-control" />
+                    <span asp-validation-for="Item.ComponentName" class="text-danger"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Item.Category" class="form-label"></label>
+                    <select asp-for="Item.Category" class="form-select">
+                        <option value="">-- Select category --</option>
+                        <option value="Electronics">Electronics</option>
+                        <option value="Electrical">Electrical</option>
+                        <option value="Tools">Tools</option>
+                        <option value="Modules">Modules</option>
+                    </select>
+                    <span asp-validation-for="Item.Category" class="text-danger"></span>
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="Item.Brand" class="form-label"></label>
+                    <input asp-for="Item.Brand" class="form-control" />
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="Item.Unit" class="form-label"></label>
+                    <input asp-for="Item.Unit" class="form-control" placeholder="e.g. pcs, meters, sets" />
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="Item.MinStockAlert" class="form-label"></label>
+                    <input asp-for="Item.MinStockAlert" class="form-control" type="number" min="0" />
+                    <span asp-validation-for="Item.MinStockAlert" class="text-danger"></span>
+                </div>
+                <div class="col-12">
+                    <label asp-for="Item.Description" class="form-label"></label>
+                    <input asp-for="Item.Description" class="form-control" />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-dark">Save Item</button>
+    <a class="btn btn-outline-secondary" asp-page="Index">Cancel</a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

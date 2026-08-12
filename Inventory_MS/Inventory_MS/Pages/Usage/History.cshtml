@@ -1,0 +1,60 @@
+@page
+@model InventoryManagement.Pages.Usage.HistoryModel
+@{
+    ViewData["Title"] = "Usage History";
+}
+
+<div class="d-flex justify-content-between align-items-end mb-3">
+    <div>
+        <h1 class="h3 mb-1">Usage History</h1>
+        <p class="text-muted small mb-0">@Model.Records.Count record(s) &middot; sorted by component, newest usage first.</p>
+    </div>
+    <a class="btn btn-dark" asp-page="/Usage/Report">+ Report Usage</a>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Unique Code</th>
+                        <th>Component Name</th>
+                        <th>Category</th>
+                        <th>Batch Purchase Date</th>
+                        <th>Used Date</th>
+                        <th class="text-end">Qty Used</th>
+                        <th>Remarks</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Records.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="8" class="text-center text-muted py-4">No usage records yet.</td>
+                        </tr>
+                    }
+                    @foreach (var record in Model.Records)
+                    {
+                        <tr>
+                            <td class="fw-medium">@record.UniqueCode</td>
+                            <td>@record.ComponentName</td>
+                            <td>@record.Category</td>
+                            <td>@record.BatchPurchaseDate</td>
+                            <td>@record.UsedDate</td>
+                            <td class="text-end">@record.QuantityUsed</td>
+                            <td>@record.Remarks</td>
+                            <td class="text-end">
+                                <div class="btn-group btn-group-sm">
+                                    <a class="btn btn-outline-secondary" asp-page="HistoryEdit" asp-route-id="@record.RowIndex">Edit</a>
+                                    <a class="btn btn-outline-danger" asp-page="HistoryDelete" asp-route-id="@record.RowIndex">Delete</a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,71 @@
+@page
+@model InventoryManagement.Pages.ElectricalInventory.EditModel
+@{
+    ViewData["Title"] = "Edit Electrical Item";
+}
+
+<h1 class="h3 mb-3">Edit Electrical Item</h1>
+
+<form method="post" asp-route-id="@Model.Item.RowIndex">
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label asp-for="Item.UniqueCode" class="form-label"></label>
+                    <input asp-for="Item.UniqueCode" class="form-control" readonly />
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Item.ComponentName" class="form-label"></label>
+                    <input asp-for="Item.ComponentName" class="form-control" readonly />
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="Item.Brand" class="form-label"></label>
+                    <input asp-for="Item.Brand" class="form-control" readonly />
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="Item.TotalQuantity" class="form-label"></label>
+                    <input asp-for="Item.TotalQuantity" class="form-control" type="number" min="1" />
+                    <span asp-validation-for="Item.TotalQuantity" class="text-danger"></span>
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="Item.Remaining" class="form-label"></label>
+                    <input asp-for="Item.Remaining" class="form-control" type="number" min="0" />
+                    <div class="form-text">Current stock; adjusted automatically by usage and damage reports.</div>
+                    <span asp-validation-for="Item.Remaining" class="text-danger"></span>
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="Item.CostPerUnit" class="form-label"></label>
+                    <input asp-for="Item.CostPerUnit" class="form-control" type="number" min="0" step="0.01" />
+                    <span asp-validation-for="Item.CostPerUnit" class="text-danger"></span>
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="Item.InvoiceNo" class="form-label"></label>
+                    <input asp-for="Item.InvoiceNo" class="form-control" />
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="Item.Supplier" class="form-label"></label>
+                    <select asp-for="Item.Supplier" asp-items="Model.SupplierOptions" class="form-select">
+                        <option value="">-- Select supplier --</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="Item.DateOfPurchase" class="form-label"></label>
+                    <input asp-for="Item.DateOfPurchase" class="form-control" type="date" />
+                </div>
+                <div class="col-12">
+                    <label asp-for="Item.Remarks" class="form-label"></label>
+                    <input asp-for="Item.Remarks" class="form-control" />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-dark">Save Changes</button>
+    <a class="btn btn-outline-secondary" asp-page="Index">Cancel</a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

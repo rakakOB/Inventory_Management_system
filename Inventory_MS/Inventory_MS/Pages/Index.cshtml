@@ -7,19 +7,22 @@
 <div class="d-flex justify-content-between align-items-end mb-4">
     <div>
         <h1 class="h3 mb-1">Inventory Dashboard</h1>
-        <p class="text-muted mb-0">Stock overview for the smart signage board project.</p>
+        <p class="text-muted mb-0">Master catalogue, stock levels and usage tracking across all categories.</p>
     </div>
-    <a class="btn btn-dark" asp-page="/Damage/Report">Report Damage</a>
+    <div>
+        <a class="btn btn-outline-dark me-1" asp-page="/Usage/Report">Report Usage</a>
+        <a class="btn btn-dark" asp-page="/Damage/Report">Report Damage</a>
+    </div>
 </div>
 
 <div class="row g-3">
     <div class="col-md-6 col-xl-3">
         <div class="card h-100">
             <div class="card-body">
-                <h5 class="card-title">PCB Inventory</h5>
-                <div class="display-6 fw-semibold">@Model.PcbCount</div>
-                <p class="card-text text-muted small mt-2">Components with GST breakdown, costs and supplier details.</p>
-                <a class="btn btn-outline-dark btn-sm stretched-link" asp-page="/PCBInventory/Index">Open PCB Inventory</a>
+                <h5 class="card-title">Master List</h5>
+                <div class="display-6 fw-semibold">@Model.MasterCount</div>
+                <p class="card-text text-muted small mt-2">All components in the master catalogue.</p>
+                <a class="btn btn-outline-dark btn-sm stretched-link" asp-page="/Master/Index">Open Master List</a>
             </div>
         </div>
     </div>
@@ -27,10 +30,43 @@
     <div class="col-md-6 col-xl-3">
         <div class="card h-100">
             <div class="card-body">
-                <h5 class="card-title">Tools Inventory</h5>
+                <h5 class="card-title">Low Stock Items</h5>
+                <div class="display-6 fw-semibold @(Model.LowStockCount > 0 ? "text-danger" : "")">@Model.LowStockCount</div>
+                <p class="card-text text-muted small mt-2">Items whose remaining stock is below the minimum alert.</p>
+                <a class="btn btn-outline-dark btn-sm stretched-link" asp-page="/Master/Index">Review Stock</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-xl-3">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">Electronics</h5>
+                <div class="display-6 fw-semibold">@Model.ElectronicsCount</div>
+                <p class="card-text text-muted small mt-2">Components in the electronics inventory.</p>
+                <a class="btn btn-outline-dark btn-sm stretched-link" asp-page="/ElectronicsInventory/Index">Open Electronics</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-xl-3">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">Electrical</h5>
+                <div class="display-6 fw-semibold">@Model.ElectricalCount</div>
+                <p class="card-text text-muted small mt-2">Components in the electrical inventory.</p>
+                <a class="btn btn-outline-dark btn-sm stretched-link" asp-page="/ElectricalInventory/Index">Open Electrical</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-xl-3">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">Tools &amp; Instruments</h5>
                 <div class="display-6 fw-semibold">@Model.ToolsCount</div>
-                <p class="card-text text-muted small mt-2">Workshop and assembly tools with availability.</p>
-                <a class="btn btn-outline-dark btn-sm stretched-link" asp-page="/ToolsInventory/Index">Open Tools Inventory</a>
+                <p class="card-text text-muted small mt-2">Workshop and assembly tools in stock.</p>
+                <a class="btn btn-outline-dark btn-sm stretched-link" asp-page="/ToolsInventory/Index">Open Tools</a>
             </div>
         </div>
     </div>
@@ -38,21 +74,10 @@
     <div class="col-md-6 col-xl-3">
         <div class="card h-100">
             <div class="card-body">
-                <h5 class="card-title">Panel Inventory</h5>
-                <div class="display-6 fw-semibold">@Model.PanelCount</div>
-                <p class="card-text text-muted small mt-2">Panels and panel-level components in stock.</p>
-                <a class="btn btn-outline-dark btn-sm stretched-link" asp-page="/PanelInventory/Index">Open Panel Inventory</a>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-6 col-xl-3">
-        <div class="card h-100">
-            <div class="card-body">
-                <h5 class="card-title">Damage Records</h5>
-                <div class="display-6 fw-semibold">@Model.DamageCount</div>
-                <p class="card-text text-muted small mt-2">Reported damaged items and the full history log.</p>
-                <a class="btn btn-outline-dark btn-sm stretched-link" asp-page="/Damage/History">Open Damage History</a>
+                <h5 class="card-title">Modules</h5>
+                <div class="display-6 fw-semibold">@Model.ModulesCount</div>
+                <p class="card-text text-muted small mt-2">Modules in the modules inventory.</p>
+                <a class="btn btn-outline-dark btn-sm stretched-link" asp-page="/ModulesInventory/Index">Open Modules</a>
             </div>
         </div>
     </div>

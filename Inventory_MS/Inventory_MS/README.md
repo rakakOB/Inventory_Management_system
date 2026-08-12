@@ -8,17 +8,23 @@ Standard.
 
 1. Create a Google Spreadsheet with exactly these tabs (header row in row 1):
 
-   - `PCB_Inventory` — Sl. No. | Category | Component Name | Total Quantity |
-     Remaining | Invoice No. | Cost per Unit (₹) | Base Cost (₹) | GST 18% (₹) |
-     Total Cost (₹) | Supplier | Date of Purchase | Remarks
-   - `Tools_Inventory` — Sl. No. | Tool Name | Category | Total Quantity |
-     Available | Invoice No. | Cost per Unit (₹) | Total Cost (₹) | Supplier |
-     Date of Purchase | Remarks
-   - `Panel_Inventory` — Sl. No. | Category | Component Name | Total Quantity |
-     Remaining | Invoice No. | Cost per Unit (₹) | Total Cost (₹) | Supplier |
-     Date of Purchase | Remarks
-   - `Damages_Components` — Sl. No. | Date | Component Name | Category |
-     Quantity Damaged | Reason for Damage | Invoice No. | Cost per Unit (₹) | Remarks
+   - `Master` — Unique Code | Component Name | Category | Brand | Description |
+     Unit | Min. Stock Alert
+   - `Suppliers` — Supplier Name | Contact Info
+   - `Electronics_Inventory` — Unique Code | Component Name | Brand | Total
+     Quantity | Remaining | Invoice No. | Cost per Unit (₹) | Total Cost (₹) |
+     Supplier | Date of Purchase | Remarks
+   - `Electrical_Inventory` — same columns as `Electronics_Inventory`
+   - `Tools_Inventory` — same columns as `Electronics_Inventory`
+   - `Modules_Inventory` — same columns as `Electronics_Inventory`
+   - `Used_Components` — Unique Code | Component Name | Category | Batch
+     Purchase Date | Used Date | Quantity Used | Remarks
+   - `Damaged_Components` — Unique Code | Component Name | Category | Batch
+     Purchase Date | Damage Date | Quantity Damaged | Invoice No. |
+     Cost per Unit (₹) | Remarks
+
+   Rows are append-only; the app sorts in memory when displaying. Costs are
+   tax-inclusive: Total Cost = Total Quantity × Cost per Unit.
 
 2. Create a service account (Google Cloud Console → IAM & Admin → Service
    Accounts), generate a JSON key, and share the spreadsheet with the

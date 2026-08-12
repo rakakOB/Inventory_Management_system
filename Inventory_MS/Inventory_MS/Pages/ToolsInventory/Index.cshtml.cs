@@ -6,18 +6,22 @@ namespace InventoryManagement.Pages.ToolsInventory;
 
 public class IndexModel : PageModel
 {
+    private const string SheetName = "Tools_Inventory";
+
     private readonly GoogleSheetsService _sheets;
 
-    public List<Tool> Tools { get; private set; } = new();
+    public List<InventoryItem> Items { get; private set; } = new();
 
     public IndexModel(GoogleSheetsService sheets) => _sheets = sheets;
 
     public async Task OnGetAsync()
     {
-        var rows = await _sheets.GetRowsAsync(Tool.SheetName);
+        var rows = await _sheets.GetRowsAsync(SheetName);
 
-        Tools = new List<Tool>();
+        Items = new List<InventoryItem>();
         for (int i = 1; i < rows.Count; i++)
-            Tools.Add(Tool.FromRow(rows[i], i + 1));
+            Items.Add(InventoryItem.FromRow(rows[i], i + 1));
+
+        Items = Items.OrderBy(item => item.ComponentName, StringComparer.OrdinalIgnoreCase).ToList();
     }
 }

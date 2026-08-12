@@ -1,0 +1,55 @@
+@page
+@model InventoryManagement.Pages.Usage.HistoryEditModel
+@{
+    ViewData["Title"] = "Edit Usage Record";
+}
+
+<h1 class="h3 mb-3">Edit Usage Record</h1>
+
+<form method="post" asp-route-id="@Model.Record.RowIndex">
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label asp-for="Record.UniqueCode" class="form-label"></label>
+                    <input asp-for="Record.UniqueCode" class="form-control" readonly />
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Record.ComponentName" class="form-label"></label>
+                    <input asp-for="Record.ComponentName" class="form-control" readonly />
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Record.Category" class="form-label"></label>
+                    <input asp-for="Record.Category" class="form-control" readonly />
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Record.BatchPurchaseDate" class="form-label"></label>
+                    <input asp-for="Record.BatchPurchaseDate" class="form-control" readonly />
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="Record.QuantityUsed" class="form-label"></label>
+                    <input asp-for="Record.QuantityUsed" class="form-control" type="number" min="1" />
+                    <div class="form-text">Changing the quantity adjusts the inventory automatically.</div>
+                    <span asp-validation-for="Record.QuantityUsed" class="text-danger"></span>
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="Record.UsedDate" class="form-label"></label>
+                    <input asp-for="Record.UsedDate" class="form-control" type="date" />
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="Record.Remarks" class="form-label"></label>
+                    <input asp-for="Record.Remarks" class="form-control" />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-dark">Save Changes</button>
+    <a class="btn btn-outline-secondary" asp-page="History">Cancel</a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

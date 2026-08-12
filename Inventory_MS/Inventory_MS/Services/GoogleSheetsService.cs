@@ -12,7 +12,7 @@ namespace InventoryManagement.Services;
 ///
 /// Conventions:
 ///  * All row indexes are 1-based and INCLUDE the header row (row 1 = header).
-///  * Sheets are addressed by tab name, e.g. "PCB_Inventory".
+///  * Sheets are addressed by tab name, e.g. "Electronics_Inventory".
 /// </summary>
 public sealed class GoogleSheetsService
 {
@@ -83,7 +83,7 @@ public sealed class GoogleSheetsService
 
             var response = await request.ExecuteAsync().ConfigureAwait(false);
 
-            // e.g. "PCB_Inventory!A14:M14" -> 14
+            // e.g. "Electronics_Inventory!A14:K14" -> 14
             return ParseRowIndexFromRange(response.Updates?.UpdatedRange)
                 ?? await GetDataRowCountAsync(sheetName).ConfigureAwait(false) + 2;
         }
@@ -114,8 +114,8 @@ public sealed class GoogleSheetsService
     }
 
     /// <summary>
-    /// Physically removes a row (shifting the rows below it up) and re-numbers
-    /// the remaining Sl. No. values so they stay sequential.
+    /// Physically removes a row (shifting the rows below it up). The UniqueCode
+    /// column is a real identifier, so remaining rows are NOT renumbered.
     /// </summary>
     public async Task DeleteRowAsync(string sheetName, int rowIndex)
     {
@@ -141,8 +141,6 @@ public sealed class GoogleSheetsService
                 Requests = new List<Request> { deleteRequest },
             };
             await _sheets.Spreadsheets.BatchUpdate(batch, _spreadsheetId).ExecuteAsync().ConfigureAwait(false);
-
-            await RenumberSlNoAsync(sheetName).ConfigureAwait(false);
         }
         finally
         {
@@ -181,27 +179,6 @@ public sealed class GoogleSheetsService
     {
         var rows = await GetRowsAsync(sheetName).ConfigureAwait(false);
         return Math.Max(0, rows.Count - 1);
-    }
-
-    /// <summary>Rewrites column A (Sl. No.) of the data rows as 1..n.</summary>
-    private async Task RenumberSlNoAsync(string sheetName)
-    {
-        var request = _sheets.Spreadsheets.Values.Get(_spreadsheetId, $"{sheetName}!A2:A1000");
-        var response = await request.ExecuteAsync().ConfigureAwait(false);
-        var rows = response.Values ?? new List<IList<object>>();
-        if (rows.Count == 0)
-            return;
-
-        var values = new List<IList<object>>();
-        for (int i = 0; i < rows.Count; i++)
-            values.Add(new List<object> { (i + 1).ToString() });
-
-        var range = $"{sheetName}!A2:A{values.Count + 1}";
-        var body = new ValueRange { Range = range, Values = values };
-        var update = _sheets.Spreadsheets.Values.Update(body, _spreadsheetId, range);
-        update.ValueInputOption =
-            SpreadsheetsResource.ValuesResource.UpdateRequest.ValueInputOptionEnum.USERENTERED;
-        await update.ExecuteAsync().ConfigureAwait(false);
     }
 
     private static int? ParseRowIndexFromRange(string? range)

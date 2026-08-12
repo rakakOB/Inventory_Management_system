@@ -1,0 +1,38 @@
+@page
+@model InventoryManagement.Pages.Usage.HistoryDeleteModel
+@{
+    ViewData["Title"] = "Delete Usage Record";
+}
+
+<h1 class="h3 mb-3">Delete Usage Record</h1>
+
+<div class="alert alert-warning">
+    <strong>Are you sure?</strong> This deletes the record from the usage log
+    and returns the used quantity to inventory.
+</div>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <dl class="row mb-0">
+            <dt class="col-sm-3">Unique Code</dt>
+            <dd class="col-sm-9">@Model.Record.UniqueCode</dd>
+            <dt class="col-sm-3">Component Name</dt>
+            <dd class="col-sm-9">@Model.Record.ComponentName</dd>
+            <dt class="col-sm-3">Category</dt>
+            <dd class="col-sm-9">@Model.Record.Category</dd>
+            <dt class="col-sm-3">Batch Purchase Date</dt>
+            <dd class="col-sm-9">@Model.Record.BatchPurchaseDate</dd>
+            <dt class="col-sm-3">Used Date</dt>
+            <dd class="col-sm-9">@Model.Record.UsedDate</dd>
+            <dt class="col-sm-3">Quantity Used</dt>
+            <dd class="col-sm-9">@Model.Record.QuantityUsed</dd>
+            <dt class="col-sm-3">Remarks</dt>
+            <dd class="col-sm-9">@Model.Record.Remarks</dd>
+        </dl>
+    </div>
+</div>
+
+<form method="post" asp-route-id="@Model.Record.RowIndex">
+    <button type="submit" class="btn btn-danger">Delete Record</button>
+    <a class="btn btn-outline-secondary" asp-page="History">Cancel</a>
+</form>

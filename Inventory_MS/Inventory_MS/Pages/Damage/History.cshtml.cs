@@ -8,24 +8,22 @@ public class HistoryModel : PageModel
 {
     private readonly GoogleSheetsService _sheets;
 
-    public List<DamageRecord> Records { get; private set; } = new();
-    public int TotalUnitsDamaged { get; private set; }
-    public decimal TotalValueLoss { get; private set; }
+    public List<DamagedItem> Records { get; private set; } = new();
 
     public HistoryModel(GoogleSheetsService sheets) => _sheets = sheets;
 
     public async Task OnGetAsync()
     {
-        var rows = await _sheets.GetRowsAsync(DamageRecord.SheetName);
+        var rows = await _sheets.GetRowsAsync(DamagedItem.SheetName);
 
-        Records = new List<DamageRecord>();
-        // Newest records first.
-        for (int i = rows.Count - 1; i >= 1; i--)
-        {
-            var record = DamageRecord.FromRow(rows[i], i + 1);
-            Records.Add(record);
-            TotalUnitsDamaged += record.QuantityDamaged;
-            TotalValueLoss += record.QuantityDamaged * record.CostPerUnit;
-        }
+        Records = new List<DamagedItem>();
+        for (int i = 1; i < rows.Count; i++)
+            Records.Add(DamagedItem.FromRow(rows[i], i + 1));
+
+        // Newest damage first within each component.
+        Records = Records
+            .OrderBy(r => r.ComponentName, StringComparer.OrdinalIgnoreCase)
+            .ThenByDescending(r => r.DamageDate)
+            .ToList();
     }
 }

@@ -6,8 +6,8 @@
 
 <h1 class="h3 mb-1">Report Damaged Items</h1>
 <p class="text-muted small mb-3">
-    Select the inventory type and the component. The damaged quantity is deducted
-    from stock automatically and written to the damage log.
+    Select the category and component. The damaged quantity is deducted from
+    stock automatically and written to the damage log.
 </p>
 
 <form method="post">
@@ -17,67 +17,57 @@
         <div class="card-body">
             <div class="row g-3">
                 <div class="col-md-4">
-                    <label asp-for="InventoryType" class="form-label">Inventory Type</label>
-                    <select asp-for="InventoryType" class="form-select" id="inventoryType">
-                        <option value="pcb">PCB Inventory</option>
-                        <option value="tools">Tools Inventory</option>
-                        <option value="panel">Panel Inventory</option>
+                    <label asp-for="Category" class="form-label"></label>
+                    <select asp-for="Category" class="form-select" id="categorySelect">
+                        <option value="Electronics">Electronics</option>
+                        <option value="Electrical">Electrical</option>
+                        <option value="Tools">Tools</option>
+                        <option value="Modules">Modules</option>
                     </select>
                 </div>
 
                 <div class="col-md-8">
-                    <label class="form-label">Component / Tool</label>
-
-                    <select name="RowIndex" id="sel-pcb" class="form-select component-select" disabled="@(Model.InventoryType != "pcb")">
-                        <option value="">-- Select PCB component --</option>
-                        @foreach (var c in Model.PcbComponents)
-                        {
-                            <option value="@c.RowIndex" data-remaining="@c.Remaining" selected="@(c.RowIndex == Model.RowIndex)">
-                                @c.ComponentName &middot; @c.InvoiceNo (Remaining: @c.Remaining)
-                            </option>
-                        }
-                    </select>
-
-                    <select name="RowIndex" id="sel-tools" class="form-select component-select" disabled="@(Model.InventoryType != "tools")">
-                        <option value="">-- Select tool --</option>
-                        @foreach (var t in Model.Tools)
-                        {
-                            <option value="@t.RowIndex" data-remaining="@t.Available" selected="@(t.RowIndex == Model.RowIndex)">
-                                @t.ToolName &middot; @t.InvoiceNo (Available: @t.Available)
-                            </option>
-                        }
-                    </select>
-
-                    <select name="RowIndex" id="sel-panel" class="form-select component-select" disabled="@(Model.InventoryType != "panel")">
-                        <option value="">-- Select panel component --</option>
-                        @foreach (var p in Model.PanelComponents)
-                        {
-                            <option value="@p.RowIndex" data-remaining="@p.Remaining" selected="@(p.RowIndex == Model.RowIndex)">
-                                @p.ComponentName &middot; @p.InvoiceNo (Remaining: @p.Remaining)
-                            </option>
-                        }
-                    </select>
-
+                    <label class="form-label">Component</label>
+                    @foreach (var kvp in Model.ComponentsByCategory)
+                    {
+                        <select name="UniqueCode" id="sel-@kvp.Key" class="form-select component-select"
+                                data-category="@kvp.Key" disabled="@(Model.Category != kvp.Key)">
+                            <option value="">-- Select component --</option>
+                            @foreach (var item in kvp.Value.OrderBy(i => i.ComponentName, StringComparer.OrdinalIgnoreCase))
+                            {
+                                <option value="@item.UniqueCode" data-remaining="@item.Remaining"
+                                        selected="@(item.UniqueCode == Model.UniqueCode)">
+                                    @item.UniqueCode &ndash; @item.ComponentName (Remaining: @item.Remaining)
+                                </option>
+                            }
+                        </select>
+                    }
+                    <span asp-validation-for="UniqueCode" class="text-danger"></span>
                     <div class="form-text" id="stockHint"></div>
                 </div>
 
                 <div class="col-md-4">
-                    <label asp-for="Quantity" class="form-label"></label>
-                    <input asp-for="Quantity" class="form-control" type="number" min="1" />
-                    <span asp-validation-for="Quantity" class="text-danger"></span>
+                    <label asp-for="QuantityDamaged" class="form-label"></label>
+                    <input asp-for="QuantityDamaged" class="form-control" type="number" min="1" />
+                    <span asp-validation-for="QuantityDamaged" class="text-danger"></span>
                 </div>
                 <div class="col-md-4">
                     <label asp-for="DamageDate" class="form-label"></label>
                     <input asp-for="DamageDate" class="form-control" type="date" />
                 </div>
                 <div class="col-md-4">
-                    <label asp-for="Reason" class="form-label"></label>
-                    <input asp-for="Reason" class="form-control" placeholder="e.g. Broken pin, burnt out" />
-                    <span asp-validation-for="Reason" class="text-danger"></span>
+                    <label asp-for="InvoiceNo" class="form-label"></label>
+                    <input asp-for="InvoiceNo" class="form-control" />
                 </div>
-                <div class="col-12">
+                <div class="col-md-6">
+                    <label asp-for="CostPerUnit" class="form-label"></label>
+                    <input asp-for="CostPerUnit" class="form-control" type="number" min="0" step="0.01" />
+                    <div class="form-text">Optional; falls back to the inventory unit cost when left blank.</div>
+                    <span asp-validation-for="CostPerUnit" class="text-danger"></span>
+                </div>
+                <div class="col-md-6">
                     <label asp-for="Remarks" class="form-label"></label>
-                    <input asp-for="Remarks" class="form-control" />
+                    <input asp-for="Remarks" class="form-control" placeholder="e.g. Broken pin, burnt out" />
                 </div>
             </div>
         </div>
@@ -90,7 +80,7 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
-        const typeSelect = document.getElementById('inventoryType');
+        const categorySelect = document.getElementById('categorySelect');
         const selects = Array.from(document.querySelectorAll('.component-select'));
         const hint = document.getElementById('stockHint');
 
@@ -107,16 +97,16 @@
         }
 
         function updateSelects() {
-            const current = typeSelect.value;
+            const current = categorySelect.value;
             selects.forEach(s => {
-                const active = s.id === 'sel-' + current;
+                const active = s.dataset.category === current;
                 s.classList.toggle('d-none', !active);
                 s.disabled = !active;
             });
             showStock();
         }
 
-        typeSelect.addEventListener('change', updateSelects);
+        categorySelect.addEventListener('change', updateSelects);
         selects.forEach(s => s.addEventListener('change', showStock));
         updateSelects();
     </script>

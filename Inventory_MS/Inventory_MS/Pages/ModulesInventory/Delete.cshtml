@@ -1,0 +1,46 @@
+@page
+@model InventoryManagement.Pages.ModulesInventory.DeleteModel
+@{
+    ViewData["Title"] = "Delete Modules Item";
+}
+
+<h1 class="h3 mb-3">Delete Modules Item</h1>
+
+<div class="alert alert-warning">
+    <strong>Are you sure?</strong> This permanently deletes the row from the Google Sheet
+    and cannot be undone.
+</div>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <dl class="row mb-0">
+            <dt class="col-sm-3">Unique Code</dt>
+            <dd class="col-sm-9">@Model.Item.UniqueCode</dd>
+            <dt class="col-sm-3">Component Name</dt>
+            <dd class="col-sm-9">@Model.Item.ComponentName</dd>
+            <dt class="col-sm-3">Brand</dt>
+            <dd class="col-sm-9">@Model.Item.Brand</dd>
+            <dt class="col-sm-3">Total Quantity</dt>
+            <dd class="col-sm-9">@Model.Item.TotalQuantity</dd>
+            <dt class="col-sm-3">Remaining</dt>
+            <dd class="col-sm-9">@Model.Item.Remaining</dd>
+            <dt class="col-sm-3">Invoice No.</dt>
+            <dd class="col-sm-9">@Model.Item.InvoiceNo</dd>
+            <dt class="col-sm-3">Cost per Unit</dt>
+            <dd class="col-sm-9">₹ @Model.Item.CostPerUnit.ToString("N2", CultureInfo.InvariantCulture)</dd>
+            <dt class="col-sm-3">Total Cost</dt>
+            <dd class="col-sm-9">₹ @Model.Item.TotalCost.ToString("N2", CultureInfo.InvariantCulture)</dd>
+            <dt class="col-sm-3">Supplier</dt>
+            <dd class="col-sm-9">@Model.Item.Supplier</dd>
+            <dt class="col-sm-3">Date of Purchase</dt>
+            <dd class="col-sm-9">@Model.Item.DateOfPurchase</dd>
+            <dt class="col-sm-3">Remarks</dt>
+            <dd class="col-sm-9">@Model.Item.Remarks</dd>
+        </dl>
+    </div>
+</div>
+
+<form method="post" asp-route-id="@Model.Item.RowIndex">
+    <button type="submit" class="btn btn-danger">Delete Permanently</button>
+    <a class="btn btn-outline-secondary" asp-page="Index">Cancel</a>
+</form>

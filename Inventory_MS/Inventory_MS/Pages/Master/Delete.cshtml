@@ -1,0 +1,38 @@
+@page
+@model InventoryManagement.Pages.Master.DeleteModel
+@{
+    ViewData["Title"] = "Delete Master Item";
+}
+
+<h1 class="h3 mb-3">Delete Master Item</h1>
+
+<div class="alert alert-warning">
+    <strong>Are you sure?</strong> This permanently deletes the row from the Google Sheet
+    and cannot be undone.
+</div>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <dl class="row mb-0">
+            <dt class="col-sm-3">Unique Code</dt>
+            <dd class="col-sm-9">@Model.Item.UniqueCode</dd>
+            <dt class="col-sm-3">Component Name</dt>
+            <dd class="col-sm-9">@Model.Item.ComponentName</dd>
+            <dt class="col-sm-3">Category</dt>
+            <dd class="col-sm-9">@Model.Item.Category</dd>
+            <dt class="col-sm-3">Brand</dt>
+            <dd class="col-sm-9">@Model.Item.Brand</dd>
+            <dt class="col-sm-3">Description</dt>
+            <dd class="col-sm-9">@Model.Item.Description</dd>
+            <dt class="col-sm-3">Unit</dt>
+            <dd class="col-sm-9">@Model.Item.Unit</dd>
+            <dt class="col-sm-3">Min. Stock Alert</dt>
+            <dd class="col-sm-9">@Model.Item.MinStockAlert</dd>
+        </dl>
+    </div>
+</div>
+
+<form method="post" asp-route-id="@Model.Item.RowIndex">
+    <button type="submit" class="btn btn-danger">Delete Permanently</button>
+    <a class="btn btn-outline-secondary" asp-page="Index">Cancel</a>
+</form>

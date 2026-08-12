@@ -3,12 +3,75 @@
   "WorkspaceRootPath": "C:\\e\\Projects\\Inventory_Management\\Inventory_MS\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{1F0AF904-5E7B-4AB0-813C-1F3999646C84}|Inventory_MS\\Inventory_MS.csproj|c:\\e\\projects\\inventory_management\\inventory_ms\\inventory_ms\\services\\googlesheetsservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{1F0AF904-5E7B-4AB0-813C-1F3999646C84}|Inventory_MS\\Inventory_MS.csproj|solutionrelative:inventory_ms\\services\\googlesheetsservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{C61EB304-2568-7592-8B6B-39A278E33F41}|Inventory_MS\\Inventory_MS.csproj|c:\\e\\projects\\inventory_management\\inventory_ms\\inventory_ms\\properties\\launchsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{C61EB304-2568-7592-8B6B-39A278E33F41}|Inventory_MS\\Inventory_MS.csproj|solutionrelative:inventory_ms\\properties\\launchsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{1F0AF904-5E7B-4AB0-813C-1F3999646C84}|Inventory_MS\\Inventory_MS.csproj|c:\\e\\projects\\inventory_management\\inventory_ms\\inventory_ms\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{1F0AF904-5E7B-4AB0-813C-1F3999646C84}|Inventory_MS\\Inventory_MS.csproj|solutionrelative:inventory_ms\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\rakgo\\AppData\\Roaming\\Microsoft\\UserSecrets\\1f275792-63ad-4e63-9369-7a7cb9027c39\\secrets.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C61EB304-2568-7592-8B6B-39A278E33F41}|Inventory_MS\\Inventory_MS.csproj|c:\\e\\projects\\inventory_management\\inventory_ms\\inventory_ms\\inventory_ms.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|",
+      "RelativeMoniker": "D:0:0:{C61EB304-2568-7592-8B6B-39A278E33F41}|Inventory_MS\\Inventory_MS.csproj|solutionrelative:inventory_ms\\inventory_ms.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C61EB304-2568-7592-8B6B-39A278E33F41}|Inventory_MS\\Inventory_MS.csproj|c:\\e\\projects\\inventory_management\\inventory_ms\\inventory_ms\\pages\\pcbinventory\\create.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{C61EB304-2568-7592-8B6B-39A278E33F41}|Inventory_MS\\Inventory_MS.csproj|solutionrelative:inventory_ms\\pages\\pcbinventory\\create.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C61EB304-2568-7592-8B6B-39A278E33F41}|Inventory_MS\\Inventory_MS.csproj|c:\\e\\projects\\inventory_management\\inventory_ms\\inventory_ms\\models\\damagerecord.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{C61EB304-2568-7592-8B6B-39A278E33F41}|Inventory_MS\\Inventory_MS.csproj|solutionrelative:inventory_ms\\models\\damagerecord.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C61EB304-2568-7592-8B6B-39A278E33F41}|Inventory_MS\\Inventory_MS.csproj|c:\\e\\projects\\inventory_management\\inventory_ms\\inventory_ms\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{C61EB304-2568-7592-8B6B-39A278E33F41}|Inventory_MS\\Inventory_MS.csproj|solutionrelative:inventory_ms\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C61EB304-2568-7592-8B6B-39A278E33F41}|Inventory_MS\\Inventory_MS.csproj|c:\\e\\projects\\inventory_management\\inventory_ms\\inventory_ms\\pages\\pcbinventory\\index.cshtml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{C61EB304-2568-7592-8B6B-39A278E33F41}|Inventory_MS\\Inventory_MS.csproj|solutionrelative:inventory_ms\\pages\\pcbinventory\\index.cshtml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C61EB304-2568-7592-8B6B-39A278E33F41}|Inventory_MS\\Inventory_MS.csproj|c:\\e\\projects\\inventory_management\\inventory_ms\\inventory_ms\\pages\\pcbinventory\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{C61EB304-2568-7592-8B6B-39A278E33F41}|Inventory_MS\\Inventory_MS.csproj|solutionrelative:inventory_ms\\pages\\pcbinventory\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C61EB304-2568-7592-8B6B-39A278E33F41}|Inventory_MS\\Inventory_MS.csproj|c:\\e\\projects\\inventory_management\\inventory_ms\\inventory_ms\\models\\pcbcomponent.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{C61EB304-2568-7592-8B6B-39A278E33F41}|Inventory_MS\\Inventory_MS.csproj|solutionrelative:inventory_ms\\models\\pcbcomponent.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C61EB304-2568-7592-8B6B-39A278E33F41}|Inventory_MS\\Inventory_MS.csproj|c:\\e\\projects\\inventory_management\\inventory_ms\\inventory_ms\\pages\\pcbinventory\\delete.cshtml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{C61EB304-2568-7592-8B6B-39A278E33F41}|Inventory_MS\\Inventory_MS.csproj|solutionrelative:inventory_ms\\pages\\pcbinventory\\delete.cshtml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C61EB304-2568-7592-8B6B-39A278E33F41}|Inventory_MS\\Inventory_MS.csproj|c:\\e\\projects\\inventory_management\\inventory_ms\\inventory_ms\\pages\\pcbinventory\\edit.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{C61EB304-2568-7592-8B6B-39A278E33F41}|Inventory_MS\\Inventory_MS.csproj|solutionrelative:inventory_ms\\pages\\pcbinventory\\edit.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C61EB304-2568-7592-8B6B-39A278E33F41}|Inventory_MS\\Inventory_MS.csproj|c:\\e\\projects\\inventory_management\\inventory_ms\\inventory_ms\\pages\\pcbinventory\\delete.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{C61EB304-2568-7592-8B6B-39A278E33F41}|Inventory_MS\\Inventory_MS.csproj|solutionrelative:inventory_ms\\pages\\pcbinventory\\delete.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C61EB304-2568-7592-8B6B-39A278E33F41}|Inventory_MS\\Inventory_MS.csproj|c:\\e\\projects\\inventory_management\\inventory_ms\\inventory_ms\\pages\\damage\\report.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{C61EB304-2568-7592-8B6B-39A278E33F41}|Inventory_MS\\Inventory_MS.csproj|solutionrelative:inventory_ms\\pages\\damage\\report.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C61EB304-2568-7592-8B6B-39A278E33F41}|Inventory_MS\\Inventory_MS.csproj|c:\\e\\projects\\inventory_management\\inventory_ms\\inventory_ms\\pages\\damage\\history.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{C61EB304-2568-7592-8B6B-39A278E33F41}|Inventory_MS\\Inventory_MS.csproj|solutionrelative:inventory_ms\\pages\\damage\\history.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C61EB304-2568-7592-8B6B-39A278E33F41}|Inventory_MS\\Inventory_MS.csproj|c:\\e\\projects\\inventory_management\\inventory_ms\\inventory_ms\\pages\\error.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{C61EB304-2568-7592-8B6B-39A278E33F41}|Inventory_MS\\Inventory_MS.csproj|solutionrelative:inventory_ms\\pages\\error.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C61EB304-2568-7592-8B6B-39A278E33F41}|Inventory_MS\\Inventory_MS.csproj|c:\\e\\projects\\inventory_management\\inventory_ms\\inventory_ms\\pages\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{C61EB304-2568-7592-8B6B-39A278E33F41}|Inventory_MS\\Inventory_MS.csproj|solutionrelative:inventory_ms\\pages\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C61EB304-2568-7592-8B6B-39A278E33F41}|Inventory_MS\\Inventory_MS.csproj|c:\\e\\projects\\inventory_management\\inventory_ms\\inventory_ms\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{C61EB304-2568-7592-8B6B-39A278E33F41}|Inventory_MS\\Inventory_MS.csproj|solutionrelative:inventory_ms\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C61EB304-2568-7592-8B6B-39A278E33F41}|Inventory_MS\\Inventory_MS.csproj|c:\\e\\projects\\inventory_management\\inventory_ms\\inventory_ms\\appsettings.development.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{C61EB304-2568-7592-8B6B-39A278E33F41}|Inventory_MS\\Inventory_MS.csproj|solutionrelative:inventory_ms\\appsettings.development.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
     }
   ],
   "DocumentGroupContainers": [
@@ -18,33 +81,224 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 0,
+          "SelectedChildIndex": 5,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "GoogleSheetsService.cs",
-              "DocumentMoniker": "C:\\e\\Projects\\Inventory_Management\\Inventory_MS\\Inventory_MS\\Services\\GoogleSheetsService.cs",
-              "RelativeDocumentMoniker": "Inventory_MS\\Services\\GoogleSheetsService.cs",
-              "ToolTip": "C:\\e\\Projects\\Inventory_Management\\Inventory_MS\\Inventory_MS\\Services\\GoogleSheetsService.cs",
-              "RelativeToolTip": "Inventory_MS\\Services\\GoogleSheetsService.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAAnAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-08-10T12:04:50.68Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 5,
               "Title": "Program.cs",
               "DocumentMoniker": "C:\\e\\Projects\\Inventory_Management\\Inventory_MS\\Inventory_MS\\Program.cs",
               "RelativeDocumentMoniker": "Inventory_MS\\Program.cs",
               "ToolTip": "C:\\e\\Projects\\Inventory_Management\\Inventory_MS\\Inventory_MS\\Program.cs",
               "RelativeToolTip": "Inventory_MS\\Program.cs",
-              "ViewState": "AgIAABIAAAAAAAAAAAAAABkAAAALAAAAAAAAAA==",
+              "ViewState": "AgIAABIAAAAAAAAAAAAAABsAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-08-10T12:03:45.561Z",
+              "WhenOpened": "2026-08-11T07:35:07.036Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "DamageRecord.cs",
+              "DocumentMoniker": "C:\\e\\Projects\\Inventory_Management\\Inventory_MS\\Inventory_MS\\Models\\DamageRecord.cs",
+              "RelativeDocumentMoniker": "Inventory_MS\\Models\\DamageRecord.cs",
+              "ToolTip": "C:\\e\\Projects\\Inventory_Management\\Inventory_MS\\Inventory_MS\\Models\\DamageRecord.cs",
+              "RelativeToolTip": "Inventory_MS\\Models\\DamageRecord.cs",
+              "ViewState": "AgIAAB0AAAAAAAAAAAAwwAUAAAAgAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-08-11T07:38:21.486Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "Create.cshtml",
+              "DocumentMoniker": "C:\\e\\Projects\\Inventory_Management\\Inventory_MS\\Inventory_MS\\Pages\\PCBInventory\\Create.cshtml",
+              "RelativeDocumentMoniker": "Inventory_MS\\Pages\\PCBInventory\\Create.cshtml",
+              "ToolTip": "C:\\e\\Projects\\Inventory_Management\\Inventory_MS\\Inventory_MS\\Pages\\PCBInventory\\Create.cshtml",
+              "RelativeToolTip": "Inventory_MS\\Pages\\PCBInventory\\Create.cshtml",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-08-11T08:06:05.254Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "Inventory_MS.csproj",
+              "DocumentMoniker": "C:\\e\\Projects\\Inventory_Management\\Inventory_MS\\Inventory_MS\\Inventory_MS.csproj",
+              "RelativeDocumentMoniker": "Inventory_MS\\Inventory_MS.csproj",
+              "ToolTip": "C:\\e\\Projects\\Inventory_Management\\Inventory_MS\\Inventory_MS\\Inventory_MS.csproj",
+              "RelativeToolTip": "Inventory_MS\\Inventory_MS.csproj",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAAOAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
+              "WhenOpened": "2026-08-11T07:20:42.988Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "secrets.json",
+              "DocumentMoniker": "C:\\Users\\rakgo\\AppData\\Roaming\\Microsoft\\UserSecrets\\1f275792-63ad-4e63-9369-7a7cb9027c39\\secrets.json",
+              "RelativeDocumentMoniker": "..\\..\\..\\..\\Users\\rakgo\\AppData\\Roaming\\Microsoft\\UserSecrets\\1f275792-63ad-4e63-9369-7a7cb9027c39\\secrets.json",
+              "ToolTip": "C:\\Users\\rakgo\\AppData\\Roaming\\Microsoft\\UserSecrets\\1f275792-63ad-4e63-9369-7a7cb9027c39\\secrets.json",
+              "RelativeToolTip": "..\\..\\..\\..\\Users\\rakgo\\AppData\\Roaming\\Microsoft\\UserSecrets\\1f275792-63ad-4e63-9369-7a7cb9027c39\\secrets.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAMAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2026-08-11T07:35:35.329Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "launchSettings.json",
+              "DocumentMoniker": "C:\\e\\Projects\\Inventory_Management\\Inventory_MS\\Inventory_MS\\Properties\\launchSettings.json",
+              "RelativeDocumentMoniker": "Inventory_MS\\Properties\\launchSettings.json",
+              "ToolTip": "C:\\e\\Projects\\Inventory_Management\\Inventory_MS\\Inventory_MS\\Properties\\launchSettings.json",
+              "RelativeToolTip": "Inventory_MS\\Properties\\launchSettings.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2026-08-11T07:30:31.361Z",
               "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "Index.cshtml.cs",
+              "DocumentMoniker": "C:\\e\\Projects\\Inventory_Management\\Inventory_MS\\Inventory_MS\\Pages\\PCBInventory\\Index.cshtml.cs",
+              "RelativeDocumentMoniker": "Inventory_MS\\Pages\\PCBInventory\\Index.cshtml.cs",
+              "ToolTip": "C:\\e\\Projects\\Inventory_Management\\Inventory_MS\\Inventory_MS\\Pages\\PCBInventory\\Index.cshtml.cs",
+              "RelativeToolTip": "Inventory_MS\\Pages\\PCBInventory\\Index.cshtml.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAABGAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-08-11T08:06:16.442Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "Delete.cshtml.cs",
+              "DocumentMoniker": "C:\\e\\Projects\\Inventory_Management\\Inventory_MS\\Inventory_MS\\Pages\\PCBInventory\\Delete.cshtml.cs",
+              "RelativeDocumentMoniker": "Inventory_MS\\Pages\\PCBInventory\\Delete.cshtml.cs",
+              "ToolTip": "C:\\e\\Projects\\Inventory_Management\\Inventory_MS\\Inventory_MS\\Pages\\PCBInventory\\Delete.cshtml.cs",
+              "RelativeToolTip": "Inventory_MS\\Pages\\PCBInventory\\Delete.cshtml.cs",
+              "ViewState": "AgIAABQAAAAAAAAAAAAwwAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-08-11T08:06:26.537Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "Edit.cshtml",
+              "DocumentMoniker": "C:\\e\\Projects\\Inventory_Management\\Inventory_MS\\Inventory_MS\\Pages\\PCBInventory\\Edit.cshtml",
+              "RelativeDocumentMoniker": "Inventory_MS\\Pages\\PCBInventory\\Edit.cshtml",
+              "ToolTip": "C:\\e\\Projects\\Inventory_Management\\Inventory_MS\\Inventory_MS\\Pages\\PCBInventory\\Edit.cshtml",
+              "RelativeToolTip": "Inventory_MS\\Pages\\PCBInventory\\Edit.cshtml",
+              "ViewState": "AgIAABgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-08-11T08:06:10.708Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "Index.cshtml",
+              "DocumentMoniker": "C:\\e\\Projects\\Inventory_Management\\Inventory_MS\\Inventory_MS\\Pages\\PCBInventory\\Index.cshtml",
+              "RelativeDocumentMoniker": "Inventory_MS\\Pages\\PCBInventory\\Index.cshtml",
+              "ToolTip": "C:\\e\\Projects\\Inventory_Management\\Inventory_MS\\Inventory_MS\\Pages\\PCBInventory\\Index.cshtml",
+              "RelativeToolTip": "Inventory_MS\\Pages\\PCBInventory\\Index.cshtml",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-08-11T08:06:13.327Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "PcbComponent.cs",
+              "DocumentMoniker": "C:\\e\\Projects\\Inventory_Management\\Inventory_MS\\Inventory_MS\\Models\\PcbComponent.cs",
+              "RelativeDocumentMoniker": "Inventory_MS\\Models\\PcbComponent.cs",
+              "ToolTip": "C:\\e\\Projects\\Inventory_Management\\Inventory_MS\\Inventory_MS\\Models\\PcbComponent.cs",
+              "RelativeToolTip": "Inventory_MS\\Models\\PcbComponent.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAqwAUAAAAUAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-08-11T08:09:24.263Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "Delete.cshtml",
+              "DocumentMoniker": "C:\\e\\Projects\\Inventory_Management\\Inventory_MS\\Inventory_MS\\Pages\\PCBInventory\\Delete.cshtml",
+              "RelativeDocumentMoniker": "Inventory_MS\\Pages\\PCBInventory\\Delete.cshtml",
+              "ToolTip": "C:\\e\\Projects\\Inventory_Management\\Inventory_MS\\Inventory_MS\\Pages\\PCBInventory\\Delete.cshtml",
+              "RelativeToolTip": "Inventory_MS\\Pages\\PCBInventory\\Delete.cshtml",
+              "ViewState": "AgIAABIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-08-11T08:06:07.132Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "Report.cshtml",
+              "DocumentMoniker": "C:\\e\\Projects\\Inventory_Management\\Inventory_MS\\Inventory_MS\\Pages\\Damage\\Report.cshtml",
+              "RelativeDocumentMoniker": "Inventory_MS\\Pages\\Damage\\Report.cshtml",
+              "ToolTip": "C:\\e\\Projects\\Inventory_Management\\Inventory_MS\\Inventory_MS\\Pages\\Damage\\Report.cshtml",
+              "RelativeToolTip": "Inventory_MS\\Pages\\Damage\\Report.cshtml",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-08-11T08:05:58.218Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 13,
+              "Title": "History.cshtml",
+              "DocumentMoniker": "C:\\e\\Projects\\Inventory_Management\\Inventory_MS\\Inventory_MS\\Pages\\Damage\\History.cshtml",
+              "RelativeDocumentMoniker": "Inventory_MS\\Pages\\Damage\\History.cshtml",
+              "ToolTip": "C:\\e\\Projects\\Inventory_Management\\Inventory_MS\\Inventory_MS\\Pages\\Damage\\History.cshtml",
+              "RelativeToolTip": "Inventory_MS\\Pages\\Damage\\History.cshtml",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-08-11T08:05:56.162Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 14,
+              "Title": "Error.cshtml",
+              "DocumentMoniker": "C:\\e\\Projects\\Inventory_Management\\Inventory_MS\\Inventory_MS\\Pages\\Error.cshtml",
+              "RelativeDocumentMoniker": "Inventory_MS\\Pages\\Error.cshtml",
+              "ToolTip": "C:\\e\\Projects\\Inventory_Management\\Inventory_MS\\Inventory_MS\\Pages\\Error.cshtml",
+              "RelativeToolTip": "Inventory_MS\\Pages\\Error.cshtml",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA0AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-08-11T08:02:37.259Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 15,
+              "Title": "Index.cshtml",
+              "DocumentMoniker": "C:\\e\\Projects\\Inventory_Management\\Inventory_MS\\Inventory_MS\\Pages\\Index.cshtml",
+              "RelativeDocumentMoniker": "Inventory_MS\\Pages\\Index.cshtml",
+              "ToolTip": "C:\\e\\Projects\\Inventory_Management\\Inventory_MS\\Inventory_MS\\Pages\\Index.cshtml",
+              "RelativeToolTip": "Inventory_MS\\Pages\\Index.cshtml",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAAKAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-08-11T08:02:15.222Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 17,
+              "Title": "appsettings.Development.json",
+              "DocumentMoniker": "C:\\e\\Projects\\Inventory_Management\\Inventory_MS\\Inventory_MS\\appsettings.Development.json",
+              "RelativeDocumentMoniker": "Inventory_MS\\appsettings.Development.json",
+              "ToolTip": "C:\\e\\Projects\\Inventory_Management\\Inventory_MS\\Inventory_MS\\appsettings.Development.json",
+              "RelativeToolTip": "Inventory_MS\\appsettings.Development.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2026-08-11T07:22:01.27Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 16,
+              "Title": "appsettings.json",
+              "DocumentMoniker": "C:\\e\\Projects\\Inventory_Management\\Inventory_MS\\Inventory_MS\\appsettings.json",
+              "RelativeDocumentMoniker": "Inventory_MS\\appsettings.json",
+              "ToolTip": "C:\\e\\Projects\\Inventory_Management\\Inventory_MS\\Inventory_MS\\appsettings.json",
+              "RelativeToolTip": "Inventory_MS\\appsettings.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2026-08-11T07:22:04.078Z"
             }
           ]
         }

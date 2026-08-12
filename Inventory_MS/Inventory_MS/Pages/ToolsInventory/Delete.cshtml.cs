@@ -7,9 +7,11 @@ namespace InventoryManagement.Pages.ToolsInventory;
 
 public class DeleteModel : PageModel
 {
+    private const string SheetName = "Tools_Inventory";
+
     private readonly GoogleSheetsService _sheets;
 
-    public Tool Component { get; private set; } = new();
+    public InventoryItem Item { get; private set; } = new();
 
     public DeleteModel(GoogleSheetsService sheets) => _sheets = sheets;
 
@@ -18,7 +20,7 @@ public class DeleteModel : PageModel
         var item = await FindAsync(id);
         if (item is null)
             return NotFound();
-        Component = item;
+        Item = item;
         return Page();
     }
 
@@ -27,18 +29,18 @@ public class DeleteModel : PageModel
         if (id is not > 0)
             return NotFound();
 
-        await _sheets.DeleteRowAsync(Tool.SheetName, id.Value);
+        await _sheets.DeleteRowAsync(SheetName, id.Value);
 
-        TempData["Success"] = "Tool deleted. The remaining rows were re-numbered.";
+        TempData["Success"] = "Inventory row deleted.";
         return RedirectToPage("./Index");
     }
 
-    private async Task<Tool?> FindAsync(int? id)
+    private async Task<InventoryItem?> FindAsync(int? id)
     {
         if (id is not > 0)
             return null;
 
-        var rows = await _sheets.GetRowsAsync(Tool.SheetName);
-        return id.Value <= rows.Count ? Tool.FromRow(rows[id.Value - 1], id.Value) : null;
+        var rows = await _sheets.GetRowsAsync(SheetName);
+        return id.Value <= rows.Count ? InventoryItem.FromRow(rows[id.Value - 1], id.Value) : null;
     }
 }

@@ -1,0 +1,50 @@
+@page
+@model InventoryManagement.Pages.Suppliers.IndexModel
+@{
+    ViewData["Title"] = "Suppliers";
+}
+
+<div class="d-flex justify-content-between align-items-end mb-3">
+    <div>
+        <h1 class="h3 mb-1">Suppliers</h1>
+        <p class="text-muted small mb-0">@Model.Suppliers.Count supplier(s) &middot; used by the category inventories.</p>
+    </div>
+    <a class="btn btn-dark" asp-page="Create">+ Create New</a>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Supplier Name</th>
+                        <th>Contact Info</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Suppliers.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="3" class="text-center text-muted py-4">No suppliers yet. Add the first one.</td>
+                        </tr>
+                    }
+                    @foreach (var supplier in Model.Suppliers)
+                    {
+                        <tr>
+                            <td class="fw-medium">@supplier.SupplierName</td>
+                            <td>@supplier.ContactInfo</td>
+                            <td class="text-end">
+                                <div class="btn-group btn-group-sm">
+                                    <a class="btn btn-outline-secondary" asp-page="Edit" asp-route-id="@supplier.RowIndex">Edit</a>
+                                    <a class="btn btn-outline-danger" asp-page="Delete" asp-route-id="@supplier.RowIndex">Delete</a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

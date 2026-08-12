@@ -1,0 +1,66 @@
+@page
+@model InventoryManagement.Pages.ElectronicsInventory.IndexModel
+@{
+    ViewData["Title"] = "Electronics Inventory";
+}
+
+<div class="d-flex justify-content-between align-items-end mb-3">
+    <div>
+        <h1 class="h3 mb-1">Electronics Inventory</h1>
+        <p class="text-muted small mb-0">@Model.Items.Count item(s) in stock.</p>
+    </div>
+    <a class="btn btn-dark" asp-page="AddStock">+ Add Stock</a>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Unique Code</th>
+                        <th>Component Name</th>
+                        <th>Brand</th>
+                        <th class="text-end">Total Qty</th>
+                        <th class="text-end">Remaining</th>
+                        <th class="text-end">Cost/Unit</th>
+                        <th class="text-end">Total Cost</th>
+                        <th>Supplier</th>
+                        <th>Date</th>
+                        <th>Remarks</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Items.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="11" class="text-center text-muted py-4">No stock yet. Add the first batch.</td>
+                        </tr>
+                    }
+                    @foreach (var item in Model.Items)
+                    {
+                        <tr>
+                            <td class="fw-medium">@item.UniqueCode</td>
+                            <td>@item.ComponentName</td>
+                            <td>@item.Brand</td>
+                            <td class="text-end">@item.TotalQuantity</td>
+                            <td class="text-end">@item.Remaining</td>
+                            <td class="text-end">₹ @item.CostPerUnit.ToString("N2", CultureInfo.InvariantCulture)</td>
+                            <td class="text-end fw-semibold">₹ @item.TotalCost.ToString("N2", CultureInfo.InvariantCulture)</td>
+                            <td>@item.Supplier</td>
+                            <td>@item.DateOfPurchase</td>
+                            <td>@item.Remarks</td>
+                            <td class="text-end">
+                                <div class="btn-group btn-group-sm">
+                                    <a class="btn btn-outline-secondary" asp-page="Edit" asp-route-id="@item.RowIndex">Edit</a>
+                                    <a class="btn btn-outline-danger" asp-page="Delete" asp-route-id="@item.RowIndex">Delete</a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

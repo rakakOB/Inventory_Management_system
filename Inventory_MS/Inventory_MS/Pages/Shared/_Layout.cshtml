@@ -29,19 +29,34 @@
                         <a class="nav-link @(IsActive("/Index") ? "active" : "")" asp-page="/Index">Home</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link @(IsActive("/PCBInventory") ? "active" : "")" asp-page="/PCBInventory/Index">PCB</a>
+                        <a class="nav-link @(IsActive("/ElectronicsInventory") ? "active" : "")" asp-page="/ElectronicsInventory/Index">Electronics</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link @(IsActive("/ToolsInventory") ? "active" : "")" asp-page="/ToolsInventory/Index">Tools</a>
+                        <a class="nav-link @(IsActive("/ElectricalInventory") ? "active" : "")" asp-page="/ElectricalInventory/Index">Electrical</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link @(IsActive("/PanelInventory") ? "active" : "")" asp-page="/PanelInventory/Index">Panels</a>
+                        <a class="nav-link @(IsActive("/ToolsInventory") ? "active" : "")" asp-page="/ToolsInventory/Index">Tools &amp; Instruments</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link @(IsActive("/ModulesInventory") ? "active" : "")" asp-page="/ModulesInventory/Index">Modules</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link @(IsActive("/Usage/Report") ? "active" : "")" asp-page="/Usage/Report">Report Usage</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link @(IsActive("/Usage/History") ? "active" : "")" asp-page="/Usage/History">Usage History</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link @(IsActive("/Damage/Report") ? "active" : "")" asp-page="/Damage/Report">Report Damage</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link @(IsActive("/Damage/History") ? "active" : "")" asp-page="/Damage/History">Damage History</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link @(IsActive("/Suppliers") ? "active" : "")" asp-page="/Suppliers/Index">Suppliers</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link @(IsActive("/Master") ? "active" : "")" asp-page="/Master/Index">Master List</a>
                     </li>
                 </ul>
             </div>

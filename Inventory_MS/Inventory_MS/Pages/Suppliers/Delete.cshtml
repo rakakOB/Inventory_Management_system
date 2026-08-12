@@ -1,0 +1,28 @@
+@page
+@model InventoryManagement.Pages.Suppliers.DeleteModel
+@{
+    ViewData["Title"] = "Delete Supplier";
+}
+
+<h1 class="h3 mb-3">Delete Supplier</h1>
+
+<div class="alert alert-warning">
+    <strong>Are you sure?</strong> This permanently deletes the row from the Google Sheet
+    and cannot be undone.
+</div>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <dl class="row mb-0">
+            <dt class="col-sm-3">Supplier Name</dt>
+            <dd class="col-sm-9">@Model.Supplier.SupplierName</dd>
+            <dt class="col-sm-3">Contact Info</dt>
+            <dd class="col-sm-9">@Model.Supplier.ContactInfo</dd>
+        </dl>
+    </div>
+</div>
+
+<form method="post" asp-route-id="@Model.Supplier.RowIndex">
+    <button type="submit" class="btn btn-danger">Delete Permanently</button>
+    <a class="btn btn-outline-secondary" asp-page="Index">Cancel</a>
+</form>

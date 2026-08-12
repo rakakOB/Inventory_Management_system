@@ -1,0 +1,42 @@
+@page
+@model InventoryManagement.Pages.Damage.HistoryDeleteModel
+@{
+    ViewData["Title"] = "Delete Damage Record";
+}
+
+<h1 class="h3 mb-3">Delete Damage Record</h1>
+
+<div class="alert alert-warning">
+    <strong>Are you sure?</strong> This deletes the record from the damage log
+    and returns the damaged quantity to inventory.
+</div>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <dl class="row mb-0">
+            <dt class="col-sm-3">Unique Code</dt>
+            <dd class="col-sm-9">@Model.Record.UniqueCode</dd>
+            <dt class="col-sm-3">Component Name</dt>
+            <dd class="col-sm-9">@Model.Record.ComponentName</dd>
+            <dt class="col-sm-3">Category</dt>
+            <dd class="col-sm-9">@Model.Record.Category</dd>
+            <dt class="col-sm-3">Batch Purchase Date</dt>
+            <dd class="col-sm-9">@Model.Record.BatchPurchaseDate</dd>
+            <dt class="col-sm-3">Damage Date</dt>
+            <dd class="col-sm-9">@Model.Record.DamageDate</dd>
+            <dt class="col-sm-3">Quantity Damaged</dt>
+            <dd class="col-sm-9">@Model.Record.QuantityDamaged</dd>
+            <dt class="col-sm-3">Invoice No.</dt>
+            <dd class="col-sm-9">@Model.Record.InvoiceNo</dd>
+            <dt class="col-sm-3">Cost per Unit</dt>
+            <dd class="col-sm-9">₹ @Model.Record.CostPerUnit.ToString("N2", CultureInfo.InvariantCulture)</dd>
+            <dt class="col-sm-3">Remarks</dt>
+            <dd class="col-sm-9">@Model.Record.Remarks</dd>
+        </dl>
+    </div>
+</div>
+
+<form method="post" asp-route-id="@Model.Record.RowIndex">
+    <button type="submit" class="btn btn-danger">Delete Record</button>
+    <a class="btn btn-outline-secondary" asp-page="History">Cancel</a>
+</form>

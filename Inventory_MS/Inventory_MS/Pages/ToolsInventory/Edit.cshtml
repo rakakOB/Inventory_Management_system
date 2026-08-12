@@ -1,69 +1,64 @@
 @page
 @model InventoryManagement.Pages.ToolsInventory.EditModel
 @{
-    ViewData["Title"] = "Edit Tool";
+    ViewData["Title"] = "Edit Tools Item";
 }
 
-<h1 class="h3 mb-1">Edit Tool</h1>
-<p class="text-muted small mb-3">Total cost is recalculated on save (no GST for tools).</p>
+<h1 class="h3 mb-3">Edit Tools &amp; Instruments Item</h1>
 
-<form method="post" asp-route-id="@Model.Component.RowIndex">
+<form method="post" asp-route-id="@Model.Item.RowIndex">
     <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
     <div class="card mb-3">
-        <div class="card-header">Tool details</div>
         <div class="card-body">
             <div class="row g-3">
                 <div class="col-md-6">
-                    <label asp-for="Component.ToolName" class="form-label"></label>
-                    <input asp-for="Component.ToolName" class="form-control" />
-                    <span asp-validation-for="Component.ToolName" class="text-danger"></span>
+                    <label asp-for="Item.UniqueCode" class="form-label"></label>
+                    <input asp-for="Item.UniqueCode" class="form-control" readonly />
                 </div>
                 <div class="col-md-6">
-                    <label asp-for="Component.Category" class="form-label"></label>
-                    <input asp-for="Component.Category" class="form-control" />
+                    <label asp-for="Item.ComponentName" class="form-label"></label>
+                    <input asp-for="Item.ComponentName" class="form-control" readonly />
                 </div>
                 <div class="col-md-4">
-                    <label asp-for="Component.TotalQuantity" class="form-label"></label>
-                    <input asp-for="Component.TotalQuantity" class="form-control" type="number" min="1" />
-                    <span asp-validation-for="Component.TotalQuantity" class="text-danger"></span>
+                    <label asp-for="Item.Brand" class="form-label"></label>
+                    <input asp-for="Item.Brand" class="form-control" readonly />
                 </div>
                 <div class="col-md-4">
-                    <label asp-for="Component.Available" class="form-label"></label>
-                    <input asp-for="Component.Available" class="form-control" type="number" min="0" />
-                    <div class="form-text">Current stock; decreased automatically by damage reports.</div>
-                    <span asp-validation-for="Component.Available" class="text-danger"></span>
+                    <label asp-for="Item.TotalQuantity" class="form-label"></label>
+                    <input asp-for="Item.TotalQuantity" class="form-control" type="number" min="1" />
+                    <span asp-validation-for="Item.TotalQuantity" class="text-danger"></span>
                 </div>
                 <div class="col-md-4">
-                    <label asp-for="Component.CostPerUnit" class="form-label"></label>
-                    <input asp-for="Component.CostPerUnit" class="form-control" type="number" min="0" step="0.01" />
-                    <span asp-validation-for="Component.CostPerUnit" class="text-danger"></span>
+                    <label asp-for="Item.Remaining" class="form-label"></label>
+                    <input asp-for="Item.Remaining" class="form-control" type="number" min="0" />
+                    <div class="form-text">Current stock; adjusted automatically by usage and damage reports.</div>
+                    <span asp-validation-for="Item.Remaining" class="text-danger"></span>
                 </div>
                 <div class="col-md-4">
-                    <label asp-for="Component.InvoiceNo" class="form-label"></label>
-                    <input asp-for="Component.InvoiceNo" class="form-control" />
+                    <label asp-for="Item.CostPerUnit" class="form-label"></label>
+                    <input asp-for="Item.CostPerUnit" class="form-control" type="number" min="0" step="0.01" />
+                    <span asp-validation-for="Item.CostPerUnit" class="text-danger"></span>
                 </div>
                 <div class="col-md-4">
-                    <label asp-for="Component.Supplier" class="form-label"></label>
-                    <input asp-for="Component.Supplier" class="form-control" />
+                    <label asp-for="Item.InvoiceNo" class="form-label"></label>
+                    <input asp-for="Item.InvoiceNo" class="form-control" />
                 </div>
                 <div class="col-md-4">
-                    <label asp-for="Component.DateOfPurchase" class="form-label"></label>
-                    <input asp-for="Component.DateOfPurchase" class="form-control" type="date" />
+                    <label asp-for="Item.Supplier" class="form-label"></label>
+                    <select asp-for="Item.Supplier" asp-items="Model.SupplierOptions" class="form-select">
+                        <option value="">-- Select supplier --</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="Item.DateOfPurchase" class="form-label"></label>
+                    <input asp-for="Item.DateOfPurchase" class="form-control" type="date" />
                 </div>
                 <div class="col-12">
-                    <label asp-for="Component.Remarks" class="form-label"></label>
-                    <input asp-for="Component.Remarks" class="form-control" />
+                    <label asp-for="Item.Remarks" class="form-label"></label>
+                    <input asp-for="Item.Remarks" class="form-control" />
                 </div>
             </div>
-        </div>
-    </div>
-
-    <div class="card mb-3">
-        <div class="card-body">
-            <h6 class="card-title">Cost summary</h6>
-            <div class="text-muted small">Total Cost (no GST)</div>
-            <div class="fw-semibold fs-5" id="previewTotal">₹ @Model.Component.TotalCost.ToString("N2", CultureInfo.InvariantCulture)</div>
         </div>
     </div>
 
@@ -73,14 +68,4 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
-    <script>
-        function recalc() {
-            const qty = parseFloat(document.getElementById('Component_TotalQuantity').value) || 0;
-            const unit = parseFloat(document.getElementById('Component_CostPerUnit').value) || 0;
-            document.getElementById('previewTotal').textContent = '₹ ' + (qty * unit).toFixed(2);
-        }
-        document.getElementById('Component_TotalQuantity').addEventListener('input', recalc);
-        document.getElementById('Component_CostPerUnit').addEventListener('input', recalc);
-        recalc();
-    </script>
 }

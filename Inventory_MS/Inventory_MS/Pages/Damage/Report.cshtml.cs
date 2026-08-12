@@ -10,29 +10,36 @@ public class ReportModel : PageModel
 {
     private readonly GoogleSheetsService _sheets;
 
-    public List<PcbComponent> PcbComponents { get; private set; } = new();
-    public List<Tool> Tools { get; private set; } = new();
-    public List<PanelComponent> PanelComponents { get; private set; } = new();
+    /// <summary>Components with stock (Remaining &gt; 0), grouped by category.</summary>
+    public Dictionary<string, List<InventoryItem>> ComponentsByCategory { get; private set; } = new();
 
     [BindProperty]
-    public string? InventoryType { get; set; }
+    [Display(Name = "Category")]
+    public string Category { get; set; } = InventoryItem.Electronics;
 
-    /// <summary>Row index of the selected component within its inventory sheet.</summary>
+    /// <summary>UniqueCode of the selected component within its category inventory.</summary>
     [BindProperty]
-    public int RowIndex { get; set; }
-
-    [BindProperty]
-    [Range(1, 99999, ErrorMessage = "Quantity must be at least 1.")]
-    public int Quantity { get; set; }
-
-    [BindProperty]
-    [Display(Name = "Reason for Damage")]
-    [Required(ErrorMessage = "Reason for damage is required.")]
-    public string Reason { get; set; } = "";
+    [Required(ErrorMessage = "Please select a component.")]
+    [Display(Name = "Component")]
+    public string? UniqueCode { get; set; }
 
     [BindProperty]
-    [Display(Name = "Date of Damage")]
+    [Range(1, 999999, ErrorMessage = "Quantity damaged must be at least 1.")]
+    [Display(Name = "Quantity Damaged")]
+    public int QuantityDamaged { get; set; }
+
+    [BindProperty]
+    [Display(Name = "Damage Date")]
     public string DamageDate { get; set; } = "";
+
+    [BindProperty]
+    [Display(Name = "Invoice No.")]
+    public string InvoiceNo { get; set; } = "";
+
+    [BindProperty]
+    [Range(0, 99999999, ErrorMessage = "Cost per unit cannot be negative.")]
+    [Display(Name = "Cost per Unit (₹)")]
+    public decimal CostPerUnit { get; set; }
 
     [BindProperty]
     [Display(Name = "Remarks")]
@@ -40,121 +47,67 @@ public class ReportModel : PageModel
 
     public ReportModel(GoogleSheetsService sheets) => _sheets = sheets;
 
-    public async Task OnGetAsync(string? type, int? rowId)
+    public async Task OnGetAsync()
     {
-        await LoadInventoriesAsync();
-        InventoryType = type is "pcb" or "tools" or "panel" ? type : "pcb";
-        RowIndex = rowId ?? 0;
+        await LoadComponentsAsync();
+        if (string.IsNullOrWhiteSpace(DamageDate))
+            DamageDate = DateTime.Today.ToString("yyyy-MM-dd");
     }
 
     public async Task<IActionResult> OnPostAsync()
     {
-        await LoadInventoriesAsync();
+        await LoadComponentsAsync();
+        if (string.IsNullOrWhiteSpace(DamageDate))
+            DamageDate = DateTime.Today.ToString("yyyy-MM-dd");
+
         if (!ModelState.IsValid)
             return Page();
 
-        string sheetName;
-        string componentName;
-        string category;
-        string invoiceNo;
-        decimal costPerUnit;
-        List<object>? originalRow = null;
+        var sheetName = InventoryItem.SheetNameFor(Category);
+        if (sheetName.Length == 0)
+            return Fail("Please choose a valid category.");
 
-        // Resolve the selected row against the matching inventory sheet and
-        // check that stock is sufficient BEFORE any write happens.
-        switch (InventoryType)
+        if (!ComponentsByCategory.TryGetValue(Category, out var items))
+            return Fail("No stock found for the selected category.");
+
+        var item = items.FirstOrDefault(i =>
+            string.Equals(i.UniqueCode, UniqueCode, StringComparison.OrdinalIgnoreCase) && i.Remaining > 0);
+        if (item is null)
+            return Fail("The selected component could not be found — it may have been deleted.");
+
+        if (QuantityDamaged > item.Remaining)
+            return Fail($"Only {item.Remaining} unit(s) of \"{item.ComponentName}\" are in stock.");
+
+        // Deduct stock first, then log the damage; restore the row if the log fails.
+        var originalRow = item.ToRow();
+        item.Remaining -= QuantityDamaged;
+        await _sheets.UpdateRowAsync(sheetName, item.RowIndex, item.ToRow());
+
+        var damaged = new DamagedItem
         {
-            case "pcb":
-            {
-                var item = PcbComponents.FirstOrDefault(c => c.RowIndex == RowIndex);
-                if (item is null)
-                    return Fail("The selected PCB component could not be found — it may have been deleted.");
-                if (Quantity > item.Remaining)
-                    return Fail($"Only {item.Remaining} unit(s) of \"{item.ComponentName}\" are in stock.");
-
-                sheetName = PcbComponent.SheetName;
-                componentName = item.ComponentName;
-                category = item.Category;
-                invoiceNo = item.InvoiceNo;
-                costPerUnit = item.CostPerUnit;
-
-                originalRow = item.ToRow();
-                item.Remaining -= Quantity;
-                await _sheets.UpdateRowAsync(sheetName, RowIndex, item.ToRow());
-                break;
-            }
-            case "tools":
-            {
-                var item = Tools.FirstOrDefault(t => t.RowIndex == RowIndex);
-                if (item is null)
-                    return Fail("The selected tool could not be found — it may have been deleted.");
-                if (Quantity > item.Available)
-                    return Fail($"Only {item.Available} unit(s) of \"{item.ToolName}\" are available.");
-
-                sheetName = Tool.SheetName;
-                componentName = item.ToolName;
-                category = item.Category;
-                invoiceNo = item.InvoiceNo;
-                costPerUnit = item.CostPerUnit;
-
-                originalRow = item.ToRow();
-                item.Available -= Quantity;
-                await _sheets.UpdateRowAsync(sheetName, RowIndex, item.ToRow());
-                break;
-            }
-            case "panel":
-            {
-                var item = PanelComponents.FirstOrDefault(p => p.RowIndex == RowIndex);
-                if (item is null)
-                    return Fail("The selected panel component could not be found — it may have been deleted.");
-                if (Quantity > item.Remaining)
-                    return Fail($"Only {item.Remaining} unit(s) of \"{item.ComponentName}\" are in stock.");
-
-                sheetName = PanelComponent.SheetName;
-                componentName = item.ComponentName;
-                category = item.Category;
-                invoiceNo = item.InvoiceNo;
-                costPerUnit = item.CostPerUnit;
-
-                originalRow = item.ToRow();
-                item.Remaining -= Quantity;
-                await _sheets.UpdateRowAsync(sheetName, RowIndex, item.ToRow());
-                break;
-            }
-            default:
-                return Fail("Please choose an inventory type.");
-        }
-
-        // Log the damage record. If logging fails, restore the stock decrement
-        // so the two sheets stay consistent.
-        var rows = await _sheets.GetRowsAsync(DamageRecord.SheetName);
-        var record = new DamageRecord
-        {
-            SlNo = (Math.Max(0, rows.Count - 1) + 1).ToString(),
-            Date = string.IsNullOrWhiteSpace(DamageDate)
-                ? DateTime.Today.ToString("yyyy-MM-dd")
-                : DamageDate.Trim(),
-            ComponentName = componentName,
-            Category = category,
-            QuantityDamaged = Quantity,
-            Reason = Reason.Trim(),
-            InvoiceNo = invoiceNo,
-            CostPerUnit = costPerUnit,
+            UniqueCode = item.UniqueCode,
+            ComponentName = item.ComponentName,
+            Category = Category,
+            BatchPurchaseDate = item.DateOfPurchase,
+            DamageDate = DamageDate.Trim(),
+            QuantityDamaged = QuantityDamaged,
+            InvoiceNo = string.IsNullOrWhiteSpace(InvoiceNo) ? item.InvoiceNo : InvoiceNo.Trim(),
+            // Optional unit cost; falls back to the inventory row's cost when blank.
+            CostPerUnit = CostPerUnit > 0 ? CostPerUnit : item.CostPerUnit,
             Remarks = Remarks.Trim(),
         };
 
         try
         {
-            await _sheets.AppendRowAsync(DamageRecord.SheetName, record.ToRow());
+            await _sheets.AppendRowAsync(DamagedItem.SheetName, damaged.ToRow());
         }
         catch
         {
-            if (originalRow is not null)
-                await _sheets.UpdateRowAsync(sheetName, RowIndex, originalRow);
+            await _sheets.UpdateRowAsync(sheetName, item.RowIndex, originalRow);
             throw;
         }
 
-        TempData["Success"] = $"Logged {Quantity} damaged unit(s) of \"{componentName}\" and updated stock.";
+        TempData["Success"] = $"Logged {QuantityDamaged} damaged unit(s) of \"{item.ComponentName}\" and updated stock.";
         return RedirectToPage("/Damage/History");
     }
 
@@ -164,26 +117,39 @@ public class ReportModel : PageModel
         return Page();
     }
 
-    private async Task LoadInventoriesAsync()
+    private async Task LoadComponentsAsync()
     {
-        var pcbTask = _sheets.GetRowsAsync(PcbComponent.SheetName);
-        var toolsTask = _sheets.GetRowsAsync(Tool.SheetName);
-        var panelTask = _sheets.GetRowsAsync(PanelComponent.SheetName);
-        await Task.WhenAll(pcbTask, toolsTask, panelTask);
+        ComponentsByCategory = new Dictionary<string, List<InventoryItem>>();
 
-        PcbComponents = new List<PcbComponent>();
-        var pcbRows = pcbTask.Result;
-        for (int i = 1; i < pcbRows.Count; i++)
-            PcbComponents.Add(PcbComponent.FromRow(pcbRows[i], i + 1));
+        var electronicsTask = LoadCategoryAsync(InventoryItem.Electronics);
+        var electricalTask = LoadCategoryAsync(InventoryItem.Electrical);
+        var toolsTask = LoadCategoryAsync(InventoryItem.Tools);
+        var modulesTask = LoadCategoryAsync(InventoryItem.Modules);
+        await Task.WhenAll(electronicsTask, electricalTask, toolsTask, modulesTask);
 
-        Tools = new List<Tool>();
-        var toolRows = toolsTask.Result;
-        for (int i = 1; i < toolRows.Count; i++)
-            Tools.Add(Tool.FromRow(toolRows[i], i + 1));
+        ComponentsByCategory[InventoryItem.Electronics] = electronicsTask.Result;
+        ComponentsByCategory[InventoryItem.Electrical] = electricalTask.Result;
+        ComponentsByCategory[InventoryItem.Tools] = toolsTask.Result;
+        ComponentsByCategory[InventoryItem.Modules] = modulesTask.Result;
+    }
 
-        PanelComponents = new List<PanelComponent>();
-        var panelRows = panelTask.Result;
-        for (int i = 1; i < panelRows.Count; i++)
-            PanelComponents.Add(PanelComponent.FromRow(panelRows[i], i + 1));
+    private async Task<List<InventoryItem>> LoadCategoryAsync(string category)
+    {
+        var list = new List<InventoryItem>();
+        try
+        {
+            var rows = await _sheets.GetRowsAsync(InventoryItem.SheetNameFor(category));
+            for (int i = 1; i < rows.Count; i++)
+            {
+                var item = InventoryItem.FromRow(rows[i], i + 1);
+                if (item.Remaining > 0)
+                    list.Add(item);
+            }
+        }
+        catch
+        {
+            // A missing/failing category sheet degrades to an empty list.
+        }
+        return list;
     }
 }

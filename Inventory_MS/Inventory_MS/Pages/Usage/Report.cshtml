@@ -1,0 +1,103 @@
+@page
+@model InventoryManagement.Pages.Usage.ReportModel
+@{
+    ViewData["Title"] = "Report Usage";
+}
+
+<h1 class="h3 mb-1">Report Component Usage</h1>
+<p class="text-muted small mb-3">
+    Select the category and component. The used quantity is deducted from stock
+    automatically and written to the usage log.
+</p>
+
+<form method="post">
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label asp-for="Category" class="form-label"></label>
+                    <select asp-for="Category" class="form-select" id="categorySelect">
+                        <option value="Electronics">Electronics</option>
+                        <option value="Electrical">Electrical</option>
+                        <option value="Tools">Tools</option>
+                        <option value="Modules">Modules</option>
+                    </select>
+                </div>
+
+                <div class="col-md-8">
+                    <label class="form-label">Component</label>
+                    @foreach (var kvp in Model.ComponentsByCategory)
+                    {
+                        <select name="UniqueCode" id="sel-@kvp.Key" class="form-select component-select"
+                                data-category="@kvp.Key" disabled="@(Model.Category != kvp.Key)">
+                            <option value="">-- Select component --</option>
+                            @foreach (var item in kvp.Value.OrderBy(i => i.ComponentName, StringComparer.OrdinalIgnoreCase))
+                            {
+                                <option value="@item.UniqueCode" data-remaining="@item.Remaining"
+                                        selected="@(item.UniqueCode == Model.UniqueCode)">
+                                    @item.UniqueCode &ndash; @item.ComponentName (Remaining: @item.Remaining)
+                                </option>
+                            }
+                        </select>
+                    }
+                    <span asp-validation-for="UniqueCode" class="text-danger"></span>
+                    <div class="form-text" id="stockHint"></div>
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="QuantityUsed" class="form-label"></label>
+                    <input asp-for="QuantityUsed" class="form-control" type="number" min="1" />
+                    <span asp-validation-for="QuantityUsed" class="text-danger"></span>
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="UsedDate" class="form-label"></label>
+                    <input asp-for="UsedDate" class="form-control" type="date" />
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="Remarks" class="form-label"></label>
+                    <input asp-for="Remarks" class="form-control" />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-dark">Submit Usage Report</button>
+    <a class="btn btn-outline-secondary" asp-page="/Usage/History">View History</a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        const categorySelect = document.getElementById('categorySelect');
+        const selects = Array.from(document.querySelectorAll('.component-select'));
+        const hint = document.getElementById('stockHint');
+
+        function activeSelect() {
+            return selects.find(s => !s.disabled);
+        }
+
+        function showStock() {
+            const sel = activeSelect();
+            const opt = sel && sel.selectedOptions[0];
+            hint.textContent = opt && opt.value
+                ? 'Available stock: ' + opt.dataset.remaining + ' unit(s)'
+                : '';
+        }
+
+        function updateSelects() {
+            const current = categorySelect.value;
+            selects.forEach(s => {
+                const active = s.dataset.category === current;
+                s.classList.toggle('d-none', !active);
+                s.disabled = !active;
+            });
+            showStock();
+        }
+
+        categorySelect.addEventListener('change', updateSelects);
+        selects.forEach(s => s.addEventListener('change', showStock));
+        updateSelects();
+    </script>
+}
