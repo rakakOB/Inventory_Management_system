@@ -4,6 +4,7 @@ using InventoryManagement.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using SupplierModel = InventoryManagement.Models.Supplier;
 
 namespace InventoryManagement.Pages.ElectronicsInventory;
 
@@ -137,7 +138,7 @@ public class AddStockModel : PageModel
     private async Task LoadLookupsAsync()
     {
         var masterTask = _sheets.GetRowsAsync(MasterItem.SheetName);
-        var suppliersTask = _sheets.GetRowsAsync(Supplier.SheetName);
+        var suppliersTask = _sheets.GetRowsAsync(SupplierModel.SheetName);
         await Task.WhenAll(masterTask, suppliersTask);
 
         MasterItems = new List<MasterItem>();
@@ -150,6 +151,6 @@ public class AddStockModel : PageModel
 
         Suppliers = new List<Supplier>();
         for (int i = 1; i < suppliersTask.Result.Count; i++)
-            Suppliers.Add(Supplier.FromRow(suppliersTask.Result[i], i + 1));
+            Suppliers.Add(SupplierModel.FromRow(suppliersTask.Result[i], i + 1));
     }
 }

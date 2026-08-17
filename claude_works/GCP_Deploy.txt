@@ -1,0 +1,103 @@
+Step 1: Create the new project
+
+# Create the project (replace with your desired project ID)
+gcloud projects create inventory-ms-app-v2 --name="Inventory Management System V2"
+
+# Set it as the active project
+gcloud config set project inventory-ms-app-v2
+
+
+Step 2: Link a billing account
+
+# List your billing accounts
+gcloud beta billing accounts list
+
+# Link the project to the billing account (replace ACCOUNT_ID)
+gcloud beta billing projects link inventory-ms-app-v2 --billing-account=ACCOUNT_ID
+
+
+Step 3: Enable the required APIs
+
+gcloud services enable appengine.googleapis.com
+gcloud services enable secretmanager.googleapis.com
+gcloud services enable sheets.googleapis.com
+
+
+Step 4: Create the App Engine application
+
+gcloud app create --region=asia-south1
+
+
+Step 5:
+
+1. Create the service account:
+gcloud iam service-accounts create inventory-sheets --display-name="Inventory Sheets Access"
+
+2. Download its JSON key:
+gcloud iam service-accounts keys create %USERPROFILE%\inventory-key.json --iam-account=inventory-sheets@inventory-ms-app-v2.iam.gserviceaccount.com
+
+3. Create the secret:
+gcloud secrets create SheetsServiceAccountKey --replication-policy="automatic"
+
+4. Upload the key as a new secret version:
+gcloud secrets versions add SheetsServiceAccountKey --data-file=%USERPROFILE%\inventory-key.json
+
+5. (Optional) List service accounts to see the App Engine default SA email:
+gcloud iam service-accounts list --filter="displayName:App Engine default service account"
+
+6. Grant the secret accessor role to the App Engine default SA:
+gcloud secrets add-iam-policy-binding SheetsServiceAccountKey --member="serviceAccount:inventory-ms-app-v2@appspot.gserviceaccount.com" --role="roles/secretmanager.secretAccessor"
+
+
+
+Step 6: Prepare your spreadsheet
+
+Go to sheets.google.com and create a new spreadsheet.
+Rename the tabs exactly to: PCB_Inventory, Tools_Inventory, Panel_Inventory, Damages_Components.
+Add the correct column headers in row 1 of each tab (matching your V1 app).
+Share the spreadsheet with the service account email (the one from the JSON key: inventory-sheets@...) as Editor.
+Copy the spreadsheet ID from the URL (the long string between /d/ and /edit).
+
+Step 7: Update app.yaml with the spreadsheet ID
+Edit the app.yaml file in your project root and replace YOUR_SPREADSHEET_ID with the actual ID.
+
+Step 8: Deploy!
+From the project folder (where app.yaml and the .csproj are):
+gcloud app deploy app.yaml
+
+------------------------------------------------------------------------------
+CLOUD RUN DEPLOY:
+
+TO deploy:
+gcloud run deploy inventory-ms --source . --region us-central1 --allow-unauthenticated --set-env-vars SpreadsheetId=1TdlXSRiTFIN_gH4FYYWkE0VfUQB_nVZw_JTrav01q58
+
+To get the id, so that I can give as share for the google sheets:
+gcloud iam service-accounts list --filter="displayName:Default compute service account"
+
+
+------------------------------------------------------------------------------
+
+DELETION AND STUFF:
+
+0. To describe the current project:
+gcloud config get-value project
+
+1. To describe the app engine:
+gcloud app describe
+
+2. Delete the project
+gcloud projects delete inventory-ms-app
+gcloud projects undelete inventory-ms-app
+
+3. set the project:
+gcloud config set project inventory-ms-app
+
+4. List all service accounts, including deleted ones
+gcloud iam service-accounts list --show-deleted
+gcloud logging read "protoPayload.methodName=google.iam.admin.v1.DeleteServiceAccount" --limit=10
+
+5. Undelete the App Engine default service account
+gcloud iam service-accounts undelete inventory-ms-app@appspot.gserviceaccount.com
+
+
+CHEAT SHEET:
