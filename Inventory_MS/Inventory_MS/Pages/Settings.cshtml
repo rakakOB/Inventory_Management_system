@@ -1,0 +1,107 @@
+@page
+@model InventoryManagement.Pages.SettingsModel
+@{
+    ViewData["Title"] = "Settings";
+}
+
+<h1 class="h3 mb-1">Settings</h1>
+<p class="text-body-secondary mb-4">Account details and appearance preferences.</p>
+
+<div class="row g-3">
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title mb-3">Account</h5>
+
+                <dl class="row mb-3">
+                    <dt class="col-sm-4 text-body-secondary fw-normal">Name</dt>
+                    <dd class="col-sm-8">
+                        @(string.IsNullOrWhiteSpace(Model.DisplayName) ? "—" : Model.DisplayName)
+                    </dd>
+
+                    <dt class="col-sm-4 text-body-secondary fw-normal">Email</dt>
+                    <dd class="col-sm-8">
+                        @(string.IsNullOrWhiteSpace(Model.Email) ? "—" : Model.Email)
+                    </dd>
+
+                    <dt class="col-sm-4 text-body-secondary fw-normal">Signed in with</dt>
+                    <dd class="col-sm-8">Google</dd>
+                </dl>
+
+                <p class="text-body-secondary small">
+                    Access is granted by adding an email address to the
+                    <code>AllowedUsers</code> tab of the spreadsheet. Ask an administrator
+                    to change who can sign in.
+                </p>
+
+                <form method="post" asp-page="/Logout" class="d-grid d-sm-block">
+                    <button type="submit" class="btn btn-outline-danger">Sign out</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title mb-3">Appearance</h5>
+
+                <label class="form-label" for="themeSelect">Colour theme</label>
+                <select id="themeSelect" class="form-select" style="max-width: 16rem;">
+                    <option value="light">Light</option>
+                    <option value="dark">Dark</option>
+                </select>
+                <div class="form-text mb-3">
+                    Applied immediately and remembered on this device.
+                </div>
+
+                <div class="border rounded p-3 bg-body-tertiary">
+                    <div class="fw-medium mb-1">Preview</div>
+                    <p class="text-body-secondary small mb-2">
+                        Body text, muted text and a table row highlight.
+                    </p>
+                    <table class="table table-sm mb-0">
+                        <tbody>
+                            <tr><td>Normal row</td><td class="text-end">42</td></tr>
+                            <tr class="low-stock"><td>Low stock row</td><td class="text-end">1</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title mb-2">More settings</h5>
+                <p class="text-body-secondary small mb-0">
+                    Reserved for future preferences — for example a default category for
+                    new stock entries, a default low-stock threshold, and email alerts when
+                    stock falls below the minimum.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            var select = document.getElementById('themeSelect');
+            var current = document.documentElement.getAttribute('data-bs-theme') || 'light';
+            select.value = current;
+
+            select.addEventListener('change', function () {
+                var theme = select.value === 'dark' ? 'dark' : 'light';
+                document.documentElement.setAttribute('data-bs-theme', theme);
+
+                // Stored in both places: localStorage is the source of truth for
+                // the early-apply script in <head>, and the cookie mirrors it so the
+                // preference is also visible server-side if it is ever needed there.
+                try { localStorage.setItem('ims-theme', theme); } catch (e) { /* private mode */ }
+                document.cookie = 'ims-theme=' + theme + ';path=/;max-age=31536000;samesite=lax';
+            });
+        })();
+    </script>
+}

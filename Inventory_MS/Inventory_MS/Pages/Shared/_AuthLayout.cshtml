@@ -1,0 +1,30 @@
+@*
+    Bare layout for the pages that are reachable without signing in
+    (Login, Access Denied). Deliberately has no navbar, since there is nothing
+    the visitor is allowed to navigate to yet.
+*@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Inventory Management System</title>
+    <partial name="_ThemeHead" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" />
+</head>
+<body class="d-flex flex-column min-vh-100 bg-body-tertiary">
+    <main class="container flex-grow-1 d-flex align-items-center justify-content-center py-5">
+        <div class="w-100" style="max-width: 26rem;">
+            @RenderBody()
+        </div>
+    </main>
+
+    <footer class="text-center text-body-secondary small py-3">
+        Inventory Management System
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

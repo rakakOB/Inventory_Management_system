@@ -5,9 +5,9 @@
 }
 
 <h1 class="h3 mb-1">Report Damaged Items</h1>
-<p class="text-muted small mb-3">
-    Select the category and component. The damaged quantity is deducted from
-    stock automatically and written to the damage log.
+<p class="text-body-secondary small mb-3">
+    Pick the category, then the specific batch the damaged parts came from. The
+    quantity is deducted from that batch and written to the damage log.
 </p>
 
 <form method="post">
@@ -27,22 +27,28 @@
                 </div>
 
                 <div class="col-md-8">
-                    <label class="form-label">Component</label>
+                    <label class="form-label">Component batch</label>
+                    @*
+                        One <select> per category is rendered and all but the active
+                        one is disabled, so a disabled select posts nothing. Options
+                        are individual batch rows since v2.2.
+                    *@
                     @foreach (var kvp in Model.ComponentsByCategory)
                     {
-                        <select name="UniqueCode" id="sel-@kvp.Key" class="form-select component-select"
+                        <select name="BatchKey" id="sel-@kvp.Key" class="form-select component-select"
                                 data-category="@kvp.Key" disabled="@(Model.Category != kvp.Key)">
-                            <option value="">-- Select component --</option>
-                            @foreach (var item in kvp.Value.OrderBy(i => i.ComponentName, StringComparer.OrdinalIgnoreCase))
+                            <option value="">-- Select component batch --</option>
+                            @foreach (var item in kvp.Value)
                             {
-                                <option value="@item.UniqueCode" data-remaining="@item.Remaining"
-                                        selected="@(item.UniqueCode == Model.UniqueCode)">
-                                    @item.UniqueCode &ndash; @item.ComponentName (Remaining: @item.Remaining)
+                                var key = InventoryManagement.Pages.Damage.ReportModel.BatchKeyFor(item);
+                                <option value="@key" data-remaining="@item.Remaining"
+                                        selected="@(key == Model.BatchKey)">
+                                    @InventoryManagement.Pages.Damage.ReportModel.BatchLabelFor(item)
                                 </option>
                             }
                         </select>
                     }
-                    <span asp-validation-for="UniqueCode" class="text-danger"></span>
+                    <span asp-validation-for="BatchKey" class="text-danger"></span>
                     <div class="form-text" id="stockHint"></div>
                 </div>
 
@@ -62,7 +68,7 @@
                 <div class="col-md-6">
                     <label asp-for="CostPerUnit" class="form-label"></label>
                     <input asp-for="CostPerUnit" class="form-control" type="number" min="0" step="0.01" />
-                    <div class="form-text">Optional; falls back to the inventory unit cost when left blank.</div>
+                    <div class="form-text">Optional; falls back to the batch's unit cost when left blank.</div>
                     <span asp-validation-for="CostPerUnit" class="text-danger"></span>
                 </div>
                 <div class="col-md-6">
@@ -73,8 +79,10 @@
         </div>
     </div>
 
-    <button type="submit" class="btn btn-dark">Submit Damage Report</button>
-    <a class="btn btn-outline-secondary" asp-page="/Damage/History">View History</a>
+    <div class="d-grid d-sm-flex gap-2">
+        <button type="submit" class="btn btn-dark">Submit Damage Report</button>
+        <a class="btn btn-outline-secondary" asp-page="/Damage/History">View History</a>
+    </div>
 </form>
 
 @section Scripts {
@@ -92,7 +100,7 @@
             const sel = activeSelect();
             const opt = sel && sel.selectedOptions[0];
             hint.textContent = opt && opt.value
-                ? 'Available stock: ' + opt.dataset.remaining + ' unit(s)'
+                ? 'Available in this batch: ' + opt.dataset.remaining + ' unit(s)'
                 : '';
         }
 

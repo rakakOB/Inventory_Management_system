@@ -20,6 +20,8 @@ public class IndexModel : PageModel
         for (int i = 1; i < rows.Count; i++)
             Items.Add(MasterItem.FromRow(rows[i], i + 1));
 
-        Items = Items.OrderBy(m => m.ComponentName, StringComparer.OrdinalIgnoreCase).ToList();
+        // v2.2: ordered by UniqueCode ascending (was ComponentName). The comparer
+        // groups by category prefix and then compares the suffix numerically.
+        Items = Items.OrderBy(m => m.UniqueCode, UniqueCodeComparer.Instance).ToList();
     }
 }

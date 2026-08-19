@@ -8,6 +8,19 @@ using SupplierModel = InventoryManagement.Models.Supplier;
 
 namespace InventoryManagement.Pages.ModulesInventory;
 
+/// <summary>
+/// Records a new stock purchase.
+///
+/// v2.2 CHANGE — every submission APPENDS a new row. Up to v2.1 this page
+/// upserted: an existing row for the same UniqueCode was updated in place,
+/// which enforced "one row per UniqueCode per category sheet" but meant a
+/// restock overwrote the previous batch's cost and supplier while keeping its
+/// invoice and purchase date, so per-batch history was unrecoverable.
+///
+/// That invariant is deliberately gone. A category sheet now holds one row per
+/// batch and several rows may share a UniqueCode. Anything that needs to act on
+/// a single batch addresses it by RowIndex.
+/// </summary>
 public class AddStockModel : PageModel
 {
     private const string SheetName = "Modules_Inventory";
@@ -50,7 +63,7 @@ public class AddStockModel : PageModel
 
     public IEnumerable<SelectListItem> ComponentOptions =>
         MasterItems
-            .OrderBy(m => m.ComponentName, StringComparer.OrdinalIgnoreCase)
+            .OrderBy(m => m.UniqueCode, UniqueCodeComparer.Instance)
             .Select(m => new SelectListItem($"{m.UniqueCode} – {m.ComponentName}", m.UniqueCode));
 
     public IEnumerable<SelectListItem> SupplierOptions =>
@@ -86,52 +99,27 @@ public class AddStockModel : PageModel
             return Page();
         }
 
-        // 2. Look for an existing inventory row with the same UniqueCode.
-        var rows = await _sheets.GetRowsAsync(SheetName);
-        InventoryItem? existing = null;
-        int existingRow = 0;
-        for (int i = 1; i < rows.Count; i++)
+        // 2. Always append: this batch is its own row, independent of any earlier
+        //    batch of the same component.
+        var item = new InventoryItem
         {
-            var item = InventoryItem.FromRow(rows[i], i + 1);
-            if (string.Equals(item.UniqueCode, master.UniqueCode, StringComparison.OrdinalIgnoreCase))
-            {
-                existing = item;
-                existingRow = i + 1;
-                break;
-            }
-        }
+            UniqueCode = master.UniqueCode,
+            ComponentName = master.ComponentName,
+            Brand = string.IsNullOrWhiteSpace(master.Brand) ? "-" : master.Brand,
+            TotalQuantity = Quantity,
+            Remaining = Quantity,
+            InvoiceNo = InvoiceNo.Trim(),
+            CostPerUnit = CostPerUnit,
+            Supplier = Supplier.Trim(),
+            DateOfPurchase = DateOfPurchase.Trim(),
+            Remarks = Remarks.Trim(),
+        };
+        item.RecalculateCosts();
 
-        if (existing is not null)
-        {
-            // Increment stock and overwrite cost/supplier with the new batch values.
-            existing.TotalQuantity += Quantity;
-            existing.Remaining += Quantity;
-            existing.CostPerUnit = CostPerUnit;
-            existing.Supplier = Supplier.Trim();
-            existing.RecalculateCosts();
-            await _sheets.UpdateRowAsync(SheetName, existingRow, existing.ToRow());
-        }
-        else
-        {
-            // First stock for this code: seed the row from the Master item.
-            var item = new InventoryItem
-            {
-                UniqueCode = master.UniqueCode,
-                ComponentName = master.ComponentName,
-                Brand = master.Brand,
-                TotalQuantity = Quantity,
-                Remaining = Quantity,
-                InvoiceNo = InvoiceNo.Trim(),
-                CostPerUnit = CostPerUnit,
-                Supplier = Supplier.Trim(),
-                DateOfPurchase = DateOfPurchase.Trim(),
-                Remarks = Remarks.Trim(),
-            };
-            item.RecalculateCosts();
-            await _sheets.AppendRowAsync(SheetName, item.ToRow());
-        }
+        await _sheets.AppendRowAsync(SheetName, item.ToRow());
 
-        TempData["Success"] = $"Added {Quantity} unit(s) of \"{master.ComponentName}\" to stock.";
+        TempData["Success"] =
+            $"Added a new batch of {Quantity} unit(s) of \"{master.ComponentName}\" ({master.UniqueCode}).";
         return RedirectToPage("./Index");
     }
 

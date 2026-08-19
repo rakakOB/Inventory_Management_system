@@ -4,19 +4,21 @@
     ViewData["Title"] = "Damage History";
 }
 
-<div class="d-flex justify-content-between align-items-end mb-3">
+<div class="d-flex flex-column flex-sm-row justify-content-between align-items-stretch align-items-sm-end gap-3 mb-3">
     <div>
         <h1 class="h3 mb-1">Damage History</h1>
-        <p class="text-muted small mb-0">@Model.Records.Count record(s) &middot; sorted by component, newest damage first.</p>
+        <p class="text-body-secondary small mb-0">@Model.Records.Count record(s) &middot; sorted by unique code, newest damage first.</p>
     </div>
-    <a class="btn btn-dark" asp-page="/Damage/Report">+ Report Damage</a>
+    <div class="d-grid d-sm-block flex-shrink-0">
+        <a class="btn btn-dark" asp-page="/Damage/Report">+ Report Damage</a>
+    </div>
 </div>
 
 <div class="card">
     <div class="card-body p-0">
         <div class="table-responsive">
             <table class="table table-striped table-hover align-middle mb-0">
-                <thead class="table-light">
+                <thead>
                     <tr>
                         <th>Unique Code</th>
                         <th>Component Name</th>

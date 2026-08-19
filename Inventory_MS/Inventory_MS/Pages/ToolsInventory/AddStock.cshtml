@@ -1,13 +1,13 @@
 @page
 @model InventoryManagement.Pages.ToolsInventory.AddStockModel
 @{
-    ViewData["Title"] = "Add Stock – Tools & Instruments";
+    ViewData["Title"] = "Add Stock – Tools";
 }
 
 <h1 class="h3 mb-1">Add Stock</h1>
-<p class="text-muted small mb-3">
-    Adding stock to an existing component increases its total and remaining
-    quantity and overwrites the cost and supplier with the new batch values.
+<p class="text-body-secondary small mb-3">
+    Each submission is recorded as a separate batch row, so a component can hold
+    several batches with their own invoice, cost, supplier and purchase date.
 </p>
 
 <form method="post">

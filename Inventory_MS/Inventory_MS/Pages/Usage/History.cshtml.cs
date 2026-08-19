@@ -20,10 +20,11 @@ public class HistoryModel : PageModel
         for (int i = 1; i < rows.Count; i++)
             Records.Add(UsedItem.FromRow(rows[i], i + 1));
 
-        // Newest usage first within each component.
+        // v2.2: grouped by UniqueCode ascending (was ComponentName), newest usage
+        // first within each code.
         Records = Records
-            .OrderBy(r => r.ComponentName, StringComparer.OrdinalIgnoreCase)
-            .ThenByDescending(r => r.UsedDate)
+            .OrderBy(r => r.UniqueCode, UniqueCodeComparer.Instance)
+            .ThenByDescending(r => r.UsedDate, StringComparer.Ordinal)
             .ToList();
     }
 }

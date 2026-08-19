@@ -1,0 +1,653 @@
+{
+  "conversation_id": "e6b78b65-c30b-42f7-b12f-54a179987ba5",
+  "next_message": null,
+  "history": [],
+  "valid_history_range": [
+    0,
+    0
+  ],
+  "transcript": [
+    "> /model",
+    "> /chat save C:\\e\\Projects\\Inventory_Management\\kiro_works\\session_2026-08-18.json"
+  ],
+  "tools": {
+    "native___": [
+      {
+        "ToolSpecification": {
+          "name": "report_issue",
+          "description": "Opens the browser to a pre-filled gh (GitHub) issue template to report chat issues, bugs, or feature requests. Pre-filled information includes the conversation transcript, chat context, and chat request IDs from the service.",
+          "input_schema": {
+            "json": {
+              "type": "object",
+              "properties": {
+                "actual_behavior": {
+                  "type": "string",
+                  "description": "Optional: The actual chat behavior that happened and demonstrates the issue or lack of a feature."
+                },
+                "title": {
+                  "type": "string",
+                  "description": "The title of the GitHub issue."
+                },
+                "expected_behavior": {
+                  "type": "string",
+                  "description": "Optional: The expected chat behavior or action that did not happen."
+                },
+                "steps_to_reproduce": {
+                  "description": "Optional: Previous user chat requests or steps that were taken that may have resulted in the issue or error response.",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "title"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ToolSpecification": {
+          "name": "code",
+          "description": "Code intelligence to analyze code with AST parsing and fuzzy search. Language auto-detected from file extension.\n\nIMPORTANT: Prefer this tool over fs_read for code files. This tool intelligently provides structured code analysis.\n\nCORE FEATURES:\n• Fuzzy search for symbols (classes, functions, methods)\n• Extracts function/class signatures via AST\n• Structural AST search and rewrite (ast-grep)\n• Codebase overview and directory exploration\n\nNOTE: Use fs_read with line ranges for unsupported patterns.\n\n## Operations\n\n**search_symbols** - Find symbol definitions by name across workspace.\nParams: symbol_name (required), path, symbol_type, limit, language, exact_match\nUses fuzzy matching by default. Set exact_match=true for precise matching.\n\n**lookup_symbols** - Batch lookup specific symbols (max 10).\nParams: symbols (required), file_path, include_source\nSet include_source=false for large classes/structs to avoid context overflow.\nScoped lookup: Provide file_path to search within specific file only.\n\n**get_document_symbols** - List all symbols in a file.\nParams: file_path (required), top_level_only (recommended: true)\nUse this for understanding file structure without reading content.\nPrefer this over fs_read when you need symbol information.\n\n**pattern_search** - AST-based structural search using ast-grep.\nParams: pattern, language (required), file_path, limit\n\n**pattern_rewrite** - AST-based code transformation.\nParams: pattern, replacement, language (required), file_path, limit, dry_run\nUse dry_run=true first to preview changes.\n\n## Pattern Search & Rewrite\n\nMetavariables:\n• $VAR - Matches single node (identifier, expression)\n• $$$ - Matches zero or more nodes (statements, parameters)\n\nSimple patterns:\n• console.log($ARG) - Match any console.log call\n• function $NAME($$$PARAMS) {} - Match function declaration\n• $OBJ.$METHOD() - Match any method call\n\nStructural rules (YAML):\n• pattern - Match code structure\n• kind - Match AST node type (function_declaration, class_declaration)\n• has - Node contains descendant matching pattern\n• inside - Node is inside ancestor matching pattern\n• all/any/not - Logical operators\n\nCritical: For relational rules (has, inside), always use stopBy: end\n\nRewrite examples:\n• pattern='var $N = $V', replacement='const $N = $V'\n• pattern='$O.hasOwnProperty($P)', replacement='Object.hasOwn($O, $P)'\n\nWorkflow:\n1. Use pattern_search first to verify matches\n2. Review matches to ensure correctness\n3. Test rewrite on small subset\n4. Apply to full codebase after verification\n\n**generate_codebase_overview** - ONLY for explicit architecture questions. Not for bug fixes or finding code.\nParams: path (optional)\n\n**search_codebase_map** - Focused directory exploration.\nParams: file_path, path\n\n## Explore Unfamiliar Code\n1. search_symbols for domain-specific types/functions/methods/classes\n2. lookup_symbols with include_source=true on promising matches\n3. grep (max 2 searches) for literal text patterns\n4. Repeat 1-3 with refined terms if needed\n5. generate_codebase_overview ONLY for architecture review or full codebase understanding\n   - NOT for bug fixes, feature work, or finding specific code\n\n## Tool Selection Priority\n1. search_symbols or lookup_symbols for finding code - ALWAYS use for functions/methods/classes/structs/interfaces\n2. get_document_symbols for file structure\n3. grep - ONLY for literal text in comments/strings, config values, code\n4. fs_read - raw file content when needed\n\n## CRITICAL RULES\n- Start with search_symbols\n- Always follow search_symbols with lookup_symbols\n- When searching for multiple related symbols, call search_symbols in parallel\n\n## Quick Reference\n• \"What's in this file?\" → get_document_symbols\n• \"Show me X class\" → search_symbols, then lookup_symbol\n\n## LSP Operations (Not Available)\nThese require LSP initialization (/code init):\nfind_references, goto_definition, get_hover, get_completions, get_diagnostics, rename_symbol, get_code_actions",
+          "input_schema": {
+            "json": {
+              "properties": {
+                "include_source": {
+                  "description": "Include source code in results (optional for lookup_symbols)",
+                  "type": "boolean"
+                },
+                "file_path": {
+                  "description": "File path (required for get_document_symbols, optional for pattern_search/search_codebase_map)",
+                  "type": "string"
+                },
+                "language": {
+                  "description": "Programming language (required for pattern_search, optional for search_symbols)",
+                  "type": "string"
+                },
+                "pattern": {
+                  "type": "string",
+                  "description": "AST pattern (required for pattern_search)"
+                },
+                "path": {
+                  "type": "string",
+                  "description": "Directory path (optional, for generate_codebase_overview: workspace root, for search_codebase_map: path filter, for search_symbols: scope search to file or directory)"
+                },
+                "limit": {
+                  "description": "Maximum results (optional for search_symbols/pattern_search)",
+                  "type": "integer"
+                },
+                "symbol_name": {
+                  "type": "string",
+                  "description": "Simple symbol name, not qualified (e.g. 'myFunction' not 'MyClass.myFunction'). Required for search_symbols"
+                },
+                "operation": {
+                  "enum": [
+                    "search_symbols",
+                    "lookup_symbols",
+                    "get_document_symbols",
+                    "pattern_search",
+                    "generate_codebase_overview",
+                    "search_codebase_map",
+                    "pattern_rewrite"
+                  ],
+                  "type": "string",
+                  "description": "The code intelligence operation to perform"
+                },
+                "symbols": {
+                  "description": "List of simple symbol names, not qualified (e.g. ['myFunction'] not ['MyClass.myFunction']). Required for lookup_symbols, max 10",
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "operation"
+              ],
+              "type": "object"
+            }
+          }
+        }
+      },
+      {
+        "ToolSpecification": {
+          "name": "web_fetch",
+          "description": "Fetch and extract content from a specific URL. Supports three modes: 'selective' (default, extracts relevant sections around search terms), 'truncated' (first 8000 chars), 'full' (complete content). Use 'selective' mode to read specific parts of a page multiple times without filling context. Provide 'search_terms' in selective mode to find relevant sections (e.g., 'pricing', 'installation').",
+          "input_schema": {
+            "json": {
+              "type": "object",
+              "properties": {
+                "search_terms": {
+                  "description": "Optional: Keywords to find in selective mode (e.g., 'pricing cost', 'installation setup'). Returns ~10 lines before and after matches. If not provided, returns beginning of page.",
+                  "type": "string"
+                },
+                "mode": {
+                  "type": "string",
+                  "enum": [
+                    "selective",
+                    "truncated",
+                    "full"
+                  ],
+                  "description": "Extraction mode: 'selective' for smart extraction (default), 'truncated' for first 8000 chars, 'full' for complete content"
+                },
+                "url": {
+                  "type": "string",
+                  "description": "URL to fetch content from"
+                }
+              },
+              "required": [
+                "url"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ToolSpecification": {
+          "name": "glob",
+          "description": "Find files and directories whose paths match a glob pattern. Respects .gitignore. Prefer this over the bash 'find' command for listing or discovering paths. Returns JSON with totalFiles (count found), truncated (true if limited), and filePaths array. When truncated is true, just mention results are truncated, don't state the limit number.",
+          "input_schema": {
+            "json": {
+              "properties": {
+                "pattern": {
+                  "type": "string",
+                  "description": "Glob pattern, e.g. '**/*.rs', 'src/**/*.{ts,tsx}' or '**/test*'."
+                },
+                "path": {
+                  "type": "string",
+                  "description": "Root directory to search from. Only set this when the user explicitly mentions a directory path. In all other cases, omit this so the tool searches from the current working directory (the project root)."
+                },
+                "limit": {
+                  "description": "Maximum files to return. If totalFiles exceeds this, truncated will be true.",
+                  "type": "integer"
+                },
+                "max_depth": {
+                  "description": "Maximum directory depth to traverse. Increase for deep nested structures.",
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "pattern"
+              ],
+              "type": "object"
+            }
+          }
+        }
+      },
+      {
+        "ToolSpecification": {
+          "name": "fs_read",
+          "description": "Tool for reading files, directories and images. Always provide an 'operations' array.\n\nFor single operation: provide array with one element.\nFor batch operations: provide array with multiple elements.\n\nAvailable modes:\n- Line: Read lines from a file\n- Directory: List directory contents\n- Search: Search for patterns in files\n- Image: Read and process images\n\nExamples:\n1. Single: {\"operations\": [{\"mode\": \"Line\", \"path\": \"/file.txt\"}]}\n2. Batch: {\"operations\": [{\"mode\": \"Line\", \"path\": \"/file1.txt\"}, {\"mode\": \"Search\", \"path\": \"/file2.txt\", \"pattern\": \"test\"}]}",
+          "input_schema": {
+            "json": {
+              "properties": {
+                "operations": {
+                  "items": {
+                    "required": [
+                      "mode"
+                    ],
+                    "type": "object",
+                    "properties": {
+                      "start_line": {
+                        "description": "Starting line number (optional, for Line mode). A negative index represents a line number starting from the end of the file.",
+                        "default": 1,
+                        "type": "integer"
+                      },
+                      "path": {
+                        "type": "string",
+                        "description": "Path to the file or directory. The path should be absolute, or otherwise start with ~ for the user's home (required for Line, Directory, Search modes)."
+                      },
+                      "image_paths": {
+                        "description": "List of paths to the images. This is currently supported by the Image mode.",
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "context_lines": {
+                        "default": 2,
+                        "type": "integer",
+                        "description": "Number of context lines around search results (optional, for Search mode)"
+                      },
+                      "end_line": {
+                        "type": "integer",
+                        "description": "Ending line number (optional, for Line mode). A negative index represents a line number starting from the end of the file.",
+                        "default": -1
+                      },
+                      "offset": {
+                        "type": "integer",
+                        "default": 0,
+                        "description": "Number of entries to skip for pagination (optional, for Directory mode). Use with max_entries to iterate through large directories. Entries are sorted by last modified time (most recent first). Default: 0"
+                      },
+                      "max_entries": {
+                        "type": "integer",
+                        "description": "Maximum number of entries to return (optional, for Directory mode). When limit is reached, results are truncated and metadata shows 'showing X of Y entries'. Use to prevent context window overflow. Default: 1000",
+                        "default": 1000
+                      },
+                      "depth": {
+                        "default": 0,
+                        "type": "integer",
+                        "description": "Depth of a recursive directory listing (optional, for Directory mode)"
+                      },
+                      "mode": {
+                        "description": "The operation mode to run in: `Line`, `Directory`, `Search`. `Line` and `Search` are only for text files, and `Directory` is only for directories. `Image` is for image files, in this mode `image_paths` is required.",
+                        "enum": [
+                          "Line",
+                          "Directory",
+                          "Search",
+                          "Image"
+                        ],
+                        "type": "string"
+                      },
+                      "exclude_patterns": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        },
+                        "description": "Glob patterns to exclude from directory listing (optional, for Directory mode). If omitted, uses defaults. If empty array [] is provided, no exclusions are applied (shows everything). If patterns are provided, they completely override the defaults. Examples: '**/target/**', '*.log'",
+                        "default": [
+                          "node_modules",
+                          ".git",
+                          "dist",
+                          "build",
+                          "out",
+                          ".cache",
+                          "target"
+                        ]
+                      },
+                      "pattern": {
+                        "type": "string",
+                        "description": "Pattern to search for (required, for Search mode). Case insensitive. The pattern matching is performed per line."
+                      }
+                    }
+                  },
+                  "type": "array",
+                  "description": "Array of operations to execute. Provide one element for single operation, multiple for batch.",
+                  "minItems": 1
+                },
+                "summary": {
+                  "type": "string",
+                  "description": "Optional description of the purpose of this batch operation (mainly useful for multiple operations)"
+                }
+              },
+              "required": [
+                "operations"
+              ],
+              "type": "object"
+            }
+          }
+        }
+      },
+      {
+        "ToolSpecification": {
+          "name": "use_subagent",
+          "description": "⚠️ CRITICAL DELEGATION TOOL ⚠️\n\n🔍 BEFORE attempting ANY task, CHECK if you have the required tools in YOUR current tool list.\n\n❌ If you DON'T have the necessary tools → YOU MUST use this tool to delegate to a subagent that does.\n✅ If you DO have the tools → Handle the task yourself.\n\n## When to Use (MANDATORY scenarios):\n\n1. **MISSING TOOLS**: The user asks you to do something but you don't see the required tool in your available tools list\n   - Example: User asks to read a file, but you don't have 'fs_read' → USE THIS TOOL\n   - Example: User asks to search code, but you don't have 'code' tool → USE THIS TOOL\n   - Example: User asks to run bash command, but you don't have 'execute_bash' → USE THIS TOOL\n\n2. **PARALLEL PROCESSING**: A complex task can be split into independent subtasks that different specialized agents can handle simultaneously\n\n3. **CAPABILITY CHECK**: Use ListAgents command first to see what specialized agents and their toolsets are available\n\n## @prompt References in Queries\n\nYou CAN pass `@prompt-name` references (including arguments) directly in the subagent query field. The system automatically resolves @prompt references before the subagent starts — the prompt content is expanded inline and the subagent receives the fully resolved text. Do NOT refuse to delegate because a query contains `@prompt-name` syntax.\n\nExample: `{\"query\": \"@my-task 'arg1:value1, arg2:value2'\"}` — this is valid and will be resolved.\n\n## How Subagents Are Different:\n- Subagents have DIFFERENT, SPECIALIZED toolsets than you\n- Each subagent may have tools you don't have access to\n- They operate independently with their own context\n- Up to 4 subagents can work in parallel\n\n## Decision Flow:\n```\nUser makes request → Check YOUR tools list → Missing required tool? → USE use_subagent\n                                          → Have required tool? → Handle it yourself\n```\n\n⚡ Remember: Don't apologize about lacking tools - just delegate to a subagent that has them! Also note that subagents that are spawned together could not communicate with each other. If they are to perform tasks that are dependent on each other. Spawn them with a different tool call!",
+          "input_schema": {
+            "json": {
+              "type": "object",
+              "properties": {
+                "content": {
+                  "type": "object",
+                  "description": "Required for `InvokeSubagents` command. Contains subagents array and optional conversation ID.",
+                  "required": [
+                    "subagents"
+                  ],
+                  "properties": {
+                    "subagents": {
+                      "items": {
+                        "properties": {
+                          "query": {
+                            "type": "string",
+                            "description": "The query or task to be handled by the subagent"
+                          },
+                          "agent_name": {
+                            "type": "string",
+                            "description": "Optional name of the specific agent to use. If not provided, uses the default agent"
+                          },
+                          "relevant_context": {
+                            "type": "string",
+                            "description": "Optional additional context that should be provided to the subagent to help it understand the task better"
+                          }
+                        },
+                        "type": "object",
+                        "required": [
+                          "query"
+                        ]
+                      },
+                      "description": "Array of subagent invocations to execute in parallel. Each invocation specifies a query, optional agent name, and optional context.",
+                      "type": "array"
+                    }
+                  }
+                },
+                "command": {
+                  "description": "The commands to run. Allowed options are `ListAgents` to query available agents, or `InvokeSubagents` to invoke one or more subagents",
+                  "enum": [
+                    "ListAgents",
+                    "InvokeSubagents"
+                  ],
+                  "type": "string"
+                }
+              },
+              "required": [
+                "command"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ToolSpecification": {
+          "name": "execute_cmd",
+          "description": "Execute the specified Windows command.",
+          "input_schema": {
+            "json": {
+              "properties": {
+                "summary": {
+                  "type": "string",
+                  "description": "A brief explanation of what the command does"
+                },
+                "command": {
+                  "description": "Windows command to execute",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "command"
+              ],
+              "type": "object"
+            }
+          }
+        }
+      },
+      {
+        "ToolSpecification": {
+          "name": "use_aws",
+          "description": "Make an AWS CLI api call with the specified service, operation, and parameters. All arguments MUST conform to the AWS CLI specification. Should the output of the invocation indicate a malformed command, invoke help to obtain the the correct command.",
+          "input_schema": {
+            "json": {
+              "properties": {
+                "label": {
+                  "type": "string",
+                  "description": "Human readable description of the api that is being called."
+                },
+                "parameters": {
+                  "description": "The parameters for the operation. The parameter keys MUST conform to the AWS CLI specification. You should prefer to use JSON Syntax over shorthand syntax wherever possible. For parameters that are booleans, prioritize using flags with no value. Denote these flags with flag names as key and an empty string as their value. You should also prefer kebab case.",
+                  "type": "object"
+                },
+                "service_name": {
+                  "description": "The name of the AWS service. If you want to query s3, you should use s3api if possible. Must not start with a dash (-).",
+                  "pattern": "^[^-].*",
+                  "type": "string"
+                },
+                "positional_args": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Positional arguments for high-level commands (e.g., s3 cp, s3 mv, s3 sync, s3 rm). These are passed directly without -- prefix. Use this for source/destination paths in S3 commands.",
+                  "type": "array"
+                },
+                "operation_name": {
+                  "type": "string",
+                  "description": "The name of the operation to perform."
+                },
+                "region": {
+                  "type": "string",
+                  "description": "Region name for calling the operation on AWS."
+                },
+                "profile_name": {
+                  "description": "Optional: AWS profile name to use from ~/.aws/credentials. Defaults to default profile if not specified.",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "region",
+                "service_name",
+                "operation_name",
+                "label"
+              ],
+              "type": "object"
+            }
+          }
+        }
+      },
+      {
+        "ToolSpecification": {
+          "name": "web_search",
+          "description": "WebSearch looks up information that is outside the model's training data or cannot be reliably inferred from the current codebase/context.\nTool performs basic compliance wrt content licensing and restriction.\nAs an agent you are responsible for adhering to compliance and attribution requirements.\nIMPORTANT: The snippets often contain enough information to answer questions - only use web_fetch if you need more detailed content from a specific webpage.\n\n## When to Use\n- When the user asks for current or up-to-date information (e.g., pricing, versions, technical specs) or explicitly requests a web search.\n- When verifying information that may have changed recently, or when the user provides a specific URL to inspect.\n\n## When NOT to Use\n- When the question involves basic concepts, historical facts, or well-established programming syntax/technical documentation.\n- When the topic does not require current or evolving information.\n\nFor any code-related tasks, follow this order:\n1. Search within the repository (if tools are available) and check if it can be inferred from existing code or documentation.\n2. Use this tool only if still unresolved and the library/data is likely new/unseen.\n\n## Content Compliance Requirements\nYou MUST adhere to strict licensing restrictions and attribution requirements when using search results:\n\n### Attribution Requirements\n- ALWAYS provide inline links to original sources using format: [description](url)\n- If not possible to provide inline link, add sources at the end of file\n- Ensure attribution is visible and accessible\n\n### Verbatim Reproduction Limits\n- NEVER reproduce more than 30 consecutive words from any single source\n- Track word count per source to ensure compliance\n- Always paraphrase and summarize rather than quote directly\n- Add compliance note when the content from the source is rephrased: \"Content was rephrased for compliance with licensing restrictions\"\n\n### Content Modification Guidelines\n- You MAY paraphrase, summarize, and reformat content\n- You MUST NOT materially change the underlying substance or meaning\n- Preserve factual accuracy while condensing information\n- Avoid altering core arguments, data, or conclusions\n\n## Usage Details\n- You may rephrase user queries to improve search effectiveness\n- You can make multiple queries to gather comprehensive information\n- Consider breaking complex questions into focused searches\n- Refine queries based on initial results if needed\n\n## Output Usage\n- Prioritize latest published sources based on publishedDate\n- Prefer official documentation to blogs and news posts\n- Use domain information to assess source authority and reliability\n\n## Error Handling\n- If unable to comply with content restrictions, explain limitations to user\n- Suggest alternative approaches when content cannot be reproduced\n- Prioritize compliance over completeness when conflicts arise\n\n## Output\nThe tool returns a JSON object with a \"results\" array containing search results:\n\n{\n  \"results\": [\n    {\n      \"title\": \"Example Page Title\",\n      \"url\": \"https://example.com/page\",\n      \"snippet\": \"Brief excerpt from the page...\",\n      \"publishedDate\": \"2025-11-20T10:30:00Z\",\n      \"domain\": \"example.com\",\n      \"id\": \"unique-id-123\",\n      \"maxVerbatimWordLimit\": 30,\n      \"publicDomain\": false\n    }\n  ]\n}\n\n## UI FROM LLM (You) back to the user\nCRITICAL: Always start your response with \"Here's what I found:\" and then start from a newline.\nALWAYS end your response with a blank line followed by 'References:' and list the sources you used in sequential order [1], [2], [3], etc. with NO gaps in numbering. Format: '[N] Title - URL' one per line. Truncate long titles to 80 characters and long URLs to 100 characters, adding '...' if truncated.",
+          "input_schema": {
+            "json": {
+              "required": [
+                "query"
+              ],
+              "properties": {
+                "query": {
+                  "description": "Search query (max 200 chars) - use concise keywords, not full sentences",
+                  "type": "string",
+                  "maxLength": 200
+                }
+              },
+              "type": "object"
+            }
+          }
+        }
+      },
+      {
+        "ToolSpecification": {
+          "name": "grep",
+          "description": "Fast text pattern search in files using regex. ALWAYS use this tool instead of 'grep', 'rg', or 'ag' commands in bash. Respects .gitignore.\n\n## Text Discovery Only\nUse grep for literal text/pattern matching: error messages, TODOs, config values, regex patterns.\n\n## For Semantic Code Understanding → Use 'code' tool if available\n- Finding symbol definitions or usages → code tool (search_symbols, goto_definition, find_references)\n- Understanding code structure/relationships → code tool\n- Distinguishing definition vs call vs import → code tool\n\n## Fallback\nIf the 'code' tool is available but returns insufficient symbol info, use grep to discover candidate files/lines, then return to 'code' for precise navigation.\n\nWhen you use this tool, prefer to show the user a small list of representative matches (including file paths and line numbers) instead of only giving a high-level summary.",
+          "input_schema": {
+            "json": {
+              "type": "object",
+              "required": [
+                "pattern"
+              ],
+              "properties": {
+                "max_total_lines": {
+                  "type": "integer",
+                  "description": "Max total matched lines returned across all files (output limit). Increase when searching for many occurrences."
+                },
+                "pattern": {
+                  "type": "string",
+                  "description": "Regex pattern to search for. Examples: 'fn main', 'class.*Component', 'TODO|FIXME'. Start with simple patterns first (e.g. just the word you're looking for), then refine if needed."
+                },
+                "max_depth": {
+                  "description": "Max directory depth to traverse when searching (search limit). Increase for deeply nested structures.",
+                  "type": "integer"
+                },
+                "case_sensitive": {
+                  "description": "Case-sensitive search. Defaults to false (case-insensitive).",
+                  "type": "boolean"
+                },
+                "max_matches_per_file": {
+                  "description": "Max matches returned per file (output limit). Increase to see all occurrences in a file.",
+                  "type": "integer"
+                },
+                "max_files": {
+                  "type": "integer",
+                  "description": "Max number of files returned (output limit). Increase for comprehensive codebase searches."
+                },
+                "path": {
+                  "type": "string",
+                  "description": "Directory to search from. Defaults to current working directory."
+                },
+                "output_mode": {
+                  "description": "Output format: 'content' returns matches as 'file:line:content' (default, best for seeing actual matches), 'files_with_matches' returns only file paths, 'count' returns match counts per file.",
+                  "type": "string",
+                  "enum": [
+                    "content",
+                    "files_with_matches",
+                    "count"
+                  ]
+                },
+                "include": {
+                  "type": "string",
+                  "description": "File filter glob. Examples: '*.rs', '*.{ts,tsx}', '*.py'"
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "ToolSpecification": {
+          "name": "introspect",
+          "description": "Use ONLY when the user is asking about this chat application's own features, slash commands, settings, or capabilities. Do NOT use for general coding questions, AWS help, or tasks the user wants you to perform. When mentioning commands in your response, always prefix them with '/' (e.g., '/chat save', '/chat load', '/context'). CRITICAL: Only provide information explicitly documented. If details about any tool, feature, or command are not documented, clearly state the information is not available rather than generating assumptions.",
+          "input_schema": {
+            "json": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "description": "The user's question about this assistant's usage, features, or capabilities",
+                  "type": "string"
+                },
+                "doc_path": {
+                  "type": "string",
+                  "description": "Path to a specific doc to retrieve (e.g., \"features/tangent-mode.md\"). Use this to get full content of a doc from the index."
+                }
+              },
+              "required": []
+            }
+          }
+        }
+      },
+      {
+        "ToolSpecification": {
+          "name": "dummy",
+          "description": "This is a dummy tool. If you are seeing this that means the tool associated with this tool call is not in the list of available tools. This could be because a wrong tool name was supplied or the list of tools has changed since the conversation has started. Do not show this when user asks you to list tools.",
+          "input_schema": {
+            "json": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      {
+        "ToolSpecification": {
+          "name": "session",
+          "description": "Adjust session settings temporarily (in-memory only, cleared on exit). CRITICAL: You MUST use introspect tool FIRST to verify setting names and understand their purpose before using set operation.\n\n## Session vs Persistent Settings\n- **session tool**: Temporary in-memory changes (cleared when chat exits) - Use for quick experiments or one-time adjustments\n- **fs_write tool**: Permanent changes saved to disk - Use when user says \"save\", \"persist\", \"permanently\", or \"always\"\n  - Global settings: ~/.kiro/settings.json\n  - Workspace settings: .kiro/settings.json\n\n## When to Use Each Tool\n- User: \"disable markdown\" → session tool (temporary)\n- User: \"disable markdown permanently\" → fs_write to ~/.kiro/settings.json (global) or .kiro/settings.json (workspace)\n- User: \"save this setting\" → fs_write (persistent)\n- User: \"try disabling markdown\" → session tool (temporary)\n\n## REQUIRED Workflow for Setting Changes\n1. User asks to change a setting\n2. Use introspect tool to find the correct setting name and understand what it does\n3. Determine if temporary (session) or permanent (fs_write)\n4. Use appropriate tool\n\n## Operations\n- **list**: Show currently configured session settings (non-default values only)\n- **get**: Get the current value of a specific setting\n- **set**: Change a setting value temporarily (MUST verify setting name with introspect first)\n- **reset**: Clear session override for a specific setting, or all session overrides if no key provided\n\n## Example Workflows\nTemporary change:\n  User: \"disable markdown\"\n  1. introspect(query=\"markdown setting\") → learn about chat.disableMarkdownRendering\n  2. session(operation=\"set\", key=\"chat.disableMarkdownRendering\", value=true)\n\nReset single setting:\n  User: \"reset markdown setting\"\n  session(operation=\"reset\", key=\"chat.disableMarkdownRendering\")\n\nReset all session overrides:\n  User: \"clear all my temporary settings\"\n  session(operation=\"reset\")\n\nPermanent change:\n  User: \"disable markdown permanently\"\n  1. introspect(query=\"markdown setting\") → learn about chat.disableMarkdownRendering\n  2. fs_write to modify ~/.kiro/settings.json with {\"chat.disableMarkdownRendering\": true}\n\nDO NOT guess setting names - always verify with introspect first.",
+          "input_schema": {
+            "json": {
+              "required": [
+                "operation"
+              ],
+              "type": "object",
+              "properties": {
+                "key": {
+                  "description": "Setting key (e.g., 'chat.disableMarkdownRendering'). Required for 'get' and 'set' operations. Optional for 'reset' (if omitted, resets all session overrides). MUST be verified with introspect tool first.",
+                  "type": "string"
+                },
+                "value": {
+                  "description": "Value to set. Type depends on the setting (boolean, string, or number). Required for 'set' operation"
+                },
+                "operation": {
+                  "enum": [
+                    "list",
+                    "get",
+                    "set",
+                    "reset"
+                  ],
+                  "type": "string",
+                  "description": "The operation to perform: 'list' shows configured settings, 'get' retrieves a specific setting, 'set' changes a setting value temporarily, 'reset' clears session override(s)"
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "ToolSpecification": {
+          "name": "fs_write",
+          "description": "A tool for creating and editing files\n * The `create` command will override the file at `path` if it already exists as a file, and otherwise create a new file\n * The `append` command will add content to the end of an existing file, automatically adding a newline if the file doesn't end with one. The file must exist.\n Notes for using the `str_replace` command:\n * The `old_str` parameter should match EXACTLY one or more consecutive lines from the original file. Be mindful of whitespaces!\n * If the `old_str` parameter is not unique in the file, the replacement will not be performed. Make sure to include enough context in `old_str` to make it unique\n * The `new_str` parameter should contain the edited lines that should replace the `old_str`.",
+          "input_schema": {
+            "json": {
+              "required": [
+                "command",
+                "path"
+              ],
+              "type": "object",
+              "properties": {
+                "file_text": {
+                  "type": "string",
+                  "description": "Required parameter of `create` command, with the content of the file to be created."
+                },
+                "insert_line": {
+                  "type": "integer",
+                  "description": "Required parameter of `insert` command. The `new_str` will be inserted AFTER the line `insert_line` of `path`."
+                },
+                "new_str": {
+                  "type": "string",
+                  "description": "Required parameter of `str_replace` command containing the new string. Required parameter of `insert` command containing the string to insert. Required parameter of `append` command containing the content to append to the file."
+                },
+                "old_str": {
+                  "description": "Required parameter of `str_replace` command containing the string in `path` to replace.",
+                  "type": "string"
+                },
+                "path": {
+                  "type": "string",
+                  "description": "Absolute path to file or directory, e.g. `/repo/file.py` or `/repo`."
+                },
+                "summary": {
+                  "type": "string",
+                  "description": "A brief explanation of what the file change does or why it's being made."
+                },
+                "command": {
+                  "enum": [
+                    "create",
+                    "str_replace",
+                    "insert",
+                    "append"
+                  ],
+                  "type": "string",
+                  "description": "The commands to run. Allowed options are: `create`, `str_replace`, `insert`, `append`."
+                }
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
+  "context_manager": {
+    "max_context_files_size": 750000,
+    "current_profile": "kiro_default",
+    "paths": [
+      "AmazonQ.md",
+      "AGENTS.md",
+      "README.md",
+      ".kiro/skills/*/SKILL.md",
+      "C:\\Users\\rakgo\\.kiro/skills/*/SKILL.md"
+    ],
+    "hooks": {}
+  },
+  "context_message_length": 6724,
+  "latest_summary": null,
+  "model_info": {
+    "model_name": "claude-opus-5",
+    "description": "Claude Opus 5 model with 1M context window",
+    "model_id": "claude-opus-5",
+    "context_window_tokens": 1000000,
+    "rate_multiplier": 2.2,
+    "rate_unit": "Credit"
+  },
+  "file_line_tracker": {},
+  "mcp_enabled": true,
+  "mcp_last_checked": [
+    2026,
+    231,
+    5,
+    22,
+    30,
+    83849200,
+    0,
+    0,
+    0
+  ],
+  "mcp_server_versions": {},
+  "mcp_disabled_due_to_api_failure": false,
+  "user_turn_metadata": {
+    "continuation_id": "318aa9c7-7279-425e-a865-1c8bee324e6e",
+    "requests": [],
+    "usage_info": []
+  }
+}

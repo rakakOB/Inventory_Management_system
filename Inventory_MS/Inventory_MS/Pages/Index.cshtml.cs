@@ -9,11 +9,16 @@ public class IndexModel : PageModel
     private readonly GoogleSheetsService _sheets;
 
     public int MasterCount { get; private set; }
-    public int LowStockCount { get; private set; }
-    public int ElectronicsCount { get; private set; }
-    public int ElectricalCount { get; private set; }
-    public int ToolsCount { get; private set; }
-    public int ModulesCount { get; private set; }
+
+    /// <summary>
+    /// Per-category totals. Since v2.2 a category sheet holds one row per stock
+    /// batch, so the row count and the number of distinct components are no
+    /// longer the same number and both are worth showing.
+    /// </summary>
+    public CategorySummary Electronics { get; private set; } = new();
+    public CategorySummary Electrical { get; private set; } = new();
+    public CategorySummary Tools { get; private set; } = new();
+    public CategorySummary Modules { get; private set; } = new();
 
     public IndexModel(GoogleSheetsService sheets) => _sheets = sheets;
 
@@ -28,33 +33,37 @@ public class IndexModel : PageModel
 
         await Task.WhenAll(masterTask, electronicsTask, electricalTask, toolsTask, modulesTask);
 
-        var masterRows = masterTask.Result;
-        MasterCount = Math.Max(0, masterRows.Count - 1);
+        MasterCount = Math.Max(0, masterTask.Result.Count - 1);
 
-        // UniqueCode -> MinStockAlert lookup built from the Master sheet.
-        var alerts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-        for (int i = 1; i < masterRows.Count; i++)
+        // Low stock is no longer summarised here. It is surfaced where it is
+        // actionable instead: rows are highlighted on each category page.
+        Electronics = Summarise(electronicsTask.Result);
+        Electrical = Summarise(electricalTask.Result);
+        Tools = Summarise(toolsTask.Result);
+        Modules = Summarise(modulesTask.Result);
+    }
+
+    private static CategorySummary Summarise(IList<IList<object>> rows)
+    {
+        var codes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var batches = 0;
+        var remaining = 0;
+
+        for (int i = 1; i < rows.Count; i++)
         {
-            var item = MasterItem.FromRow(masterRows[i], i + 1);
+            var item = InventoryItem.FromRow(rows[i], i + 1);
+            batches++;
+            remaining += item.Remaining;
             if (!string.IsNullOrWhiteSpace(item.UniqueCode))
-                alerts[item.UniqueCode] = item.MinStockAlert;
+                codes.Add(item.UniqueCode);
         }
 
-        ElectronicsCount = Math.Max(0, electronicsTask.Result.Count - 1);
-        ElectricalCount = Math.Max(0, electricalTask.Result.Count - 1);
-        ToolsCount = Math.Max(0, toolsTask.Result.Count - 1);
-        ModulesCount = Math.Max(0, modulesTask.Result.Count - 1);
-
-        // Count items whose remaining stock is below the Master minimum alert.
-        foreach (var rows in new[] { electronicsTask.Result, electricalTask.Result, toolsTask.Result, modulesTask.Result })
+        return new CategorySummary
         {
-            for (int i = 1; i < rows.Count; i++)
-            {
-                var item = InventoryItem.FromRow(rows[i], i + 1);
-                if (alerts.TryGetValue(item.UniqueCode, out var minStock) && item.Remaining < minStock)
-                    LowStockCount++;
-            }
-        }
+            Components = codes.Count,
+            Batches = batches,
+            RemainingUnits = remaining,
+        };
     }
 
     private async Task<IList<IList<object>>> LoadRowsAsync(string sheetName)
@@ -67,5 +76,12 @@ public class IndexModel : PageModel
         {
             return new List<IList<object>>();
         }
+    }
+
+    public sealed class CategorySummary
+    {
+        public int Components { get; init; }
+        public int Batches { get; init; }
+        public int RemainingUnits { get; init; }
     }
 }

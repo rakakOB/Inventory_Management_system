@@ -38,7 +38,7 @@ public class HistoryDeleteModel : PageModel
         if (sheetName.Length > 0)
         {
             var invRows = await _sheets.GetRowsAsync(sheetName);
-            var item = FindByCode(invRows, record.UniqueCode);
+            var item = FindBatch(invRows, record.UniqueCode, record.BatchPurchaseDate);
             if (item is not null)
             {
                 item.Remaining += record.QuantityDamaged;
@@ -61,14 +61,33 @@ public class HistoryDeleteModel : PageModel
         return id.Value <= rows.Count ? DamagedItem.FromRow(rows[id.Value - 1], id.Value) : null;
     }
 
-    private static InventoryItem? FindByCode(IList<IList<object>> rows, string uniqueCode)
+    /// <summary>
+    /// Locates the batch row a history record came from.
+    ///
+    /// v2.2: a category sheet may hold several rows per UniqueCode, so the code
+    /// alone no longer identifies a row. The log carries the batch's purchase
+    /// date, so that is used as the discriminator. If nothing matches on both
+    /// (the batch row was edited or removed), fall back to the first row with the
+    /// same code so the stock reversal still lands somewhere sensible instead of
+    /// being silently dropped.
+    /// </summary>
+    private static InventoryItem? FindBatch(
+        IList<IList<object>> rows, string uniqueCode, string batchPurchaseDate)
     {
+        InventoryItem? codeMatch = null;
+
         for (int i = 1; i < rows.Count; i++)
         {
             var item = InventoryItem.FromRow(rows[i], i + 1);
-            if (string.Equals(item.UniqueCode, uniqueCode, StringComparison.OrdinalIgnoreCase))
+            if (!string.Equals(item.UniqueCode, uniqueCode, StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            if (string.Equals(item.DateOfPurchase, batchPurchaseDate, StringComparison.OrdinalIgnoreCase))
                 return item;
+
+            codeMatch ??= item;
         }
-        return null;
+
+        return codeMatch;
     }
 }

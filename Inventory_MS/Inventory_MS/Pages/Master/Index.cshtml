@@ -4,19 +4,21 @@
     ViewData["Title"] = "Master List";
 }
 
-<div class="d-flex justify-content-between align-items-end mb-3">
+<div class="d-flex flex-column flex-sm-row justify-content-between align-items-stretch align-items-sm-end gap-3 mb-3">
     <div>
         <h1 class="h3 mb-1">Master List</h1>
-        <p class="text-muted small mb-0">@Model.Items.Count item(s) &middot; the catalogue behind every category inventory.</p>
+        <p class="text-body-secondary small mb-0">@Model.Items.Count item(s) &middot; sorted by unique code &middot; the catalogue behind every category inventory.</p>
     </div>
-    <a class="btn btn-dark" asp-page="Create">+ Create New</a>
+    <div class="d-grid d-sm-block flex-shrink-0">
+        <a class="btn btn-dark" asp-page="Create">+ Create New</a>
+    </div>
 </div>
 
 <div class="card">
     <div class="card-body p-0">
         <div class="table-responsive">
             <table class="table table-striped table-hover align-middle mb-0">
-                <thead class="table-light">
+                <thead>
                     <tr>
                         <th>Unique Code</th>
                         <th>Component Name</th>

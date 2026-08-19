@@ -1,0 +1,26 @@
+@*
+    Applies the saved colour theme before the first paint.
+
+    The choice lives in localStorage under "ims-theme" and is mirrored into a
+    cookie of the same name, so it survives a browser restart and is also
+    readable server-side if a future change needs it. This script must stay
+    inline and in <head>: loading it as a separate file would let the page paint
+    in the wrong theme first and flash.
+*@
+<script>
+    (function () {
+        try {
+            var theme = localStorage.getItem('ims-theme');
+            if (!theme) {
+                var match = document.cookie.match(/(?:^|;\s*)ims-theme=(light|dark)/);
+                theme = match ? match[1] : null;
+            }
+            if (theme !== 'dark' && theme !== 'light') {
+                theme = 'light';
+            }
+            document.documentElement.setAttribute('data-bs-theme', theme);
+        } catch (e) {
+            document.documentElement.setAttribute('data-bs-theme', 'light');
+        }
+    })();
+</script>

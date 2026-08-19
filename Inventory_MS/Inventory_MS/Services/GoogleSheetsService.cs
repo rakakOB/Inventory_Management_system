@@ -36,7 +36,7 @@ public sealed class GoogleSheetsService
         _sheets = new SheetsService(new BaseClientService.Initializer
         {
             HttpClientInitializer = LoadCredential(credentialsPath),
-            ApplicationName = "Smart-Signage-Inventory",
+            ApplicationName = "Inventory-Management-System",
         });
     }
 

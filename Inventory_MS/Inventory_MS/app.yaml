@@ -1,25 +1,6 @@
-# Google Cloud App Engine Standard (.NET 8, second generation)
 runtime: aspnetcore
 env: standard
 instance_class: B1
 
-# The service-account JSON key is mounted from Secret Manager as a read-only
-# volume. Create the secret with:
-#   gcloud secrets create SERVICE_ACCOUNT_KEY --data-file=service-account-key.json
-secret_volumes:
-  - mount_path: /var/secrets/google
-    name: service-account-key
-    secret_id: SERVICE_ACCOUNT_KEY
-    version: latest
-
-volume_mounts:
-  - name: service-account-key
-    mount_path: /var/secrets/google
-    read_only: true
-
 env_variables:
-  SpreadsheetId: "REPLACE_WITH_YOUR_SPREADSHEET_ID"
-  ASPNETCORE_ENVIRONMENT: "Production"
-  # Files inside a secret volume are named after the secret id. If yours
-  # differs from SERVICE_ACCOUNT_KEY, update the path below accordingly.
-  GOOGLE_APPLICATION_CREDENTIALS: "/var/secrets/google/SERVICE_ACCOUNT_KEY"
+  SpreadsheetId: "1TdlXSRiTFIN_gH4FYYWkE0VfUQB_nVZw_JTrav01q58"

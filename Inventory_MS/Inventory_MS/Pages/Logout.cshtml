@@ -1,0 +1,16 @@
+@page
+@model InventoryManagement.Pages.LogoutModel
+@{
+    ViewData["Title"] = "Sign Out";
+    Layout = "_AuthLayout";
+}
+
+@* Reached only if a GET somehow lands here; the page model redirects instead. *@
+<div class="card shadow-sm">
+    <div class="card-body p-4 text-center">
+        <p class="mb-3">Signing out…</p>
+        <form method="post">
+            <button type="submit" class="btn btn-dark w-100">Sign out</button>
+        </form>
+    </div>
+</div>

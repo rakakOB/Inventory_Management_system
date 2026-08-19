@@ -1,22 +1,32 @@
 @page
 @model InventoryManagement.Pages.ToolsInventory.IndexModel
 @{
-    ViewData["Title"] = "Tools & Instruments Inventory";
+    ViewData["Title"] = "Tools Inventory";
 }
 
-<div class="d-flex justify-content-between align-items-end mb-3">
+<div class="d-flex flex-column flex-sm-row justify-content-between align-items-stretch align-items-sm-end gap-3 mb-3">
     <div>
-        <h1 class="h3 mb-1">Tools &amp; Instruments Inventory</h1>
-        <p class="text-muted small mb-0">@Model.Items.Count item(s) in stock.</p>
+        <h1 class="h3 mb-1">Tools Inventory</h1>
+        <p class="text-body-secondary small mb-0">
+            @Model.ComponentCount component(s) across @Model.Items.Count batch row(s).
+            @if (Model.LowStockCodes.Count > 0)
+            {
+                <span class="text-danger fw-medium">
+                    @Model.LowStockCodes.Count component(s) below the minimum stock alert.
+                </span>
+            }
+        </p>
     </div>
-    <a class="btn btn-dark" asp-page="AddStock">+ Add Stock</a>
+    <div class="d-grid d-sm-block flex-shrink-0">
+        <a class="btn btn-dark" asp-page="AddStock">+ Add Stock</a>
+    </div>
 </div>
 
 <div class="card">
     <div class="card-body p-0">
         <div class="table-responsive">
             <table class="table table-striped table-hover align-middle mb-0">
-                <thead class="table-light">
+                <thead>
                     <tr>
                         <th>Unique Code</th>
                         <th>Component Name</th>
@@ -35,14 +45,21 @@
                     @if (Model.Items.Count == 0)
                     {
                         <tr>
-                            <td colspan="11" class="text-center text-muted py-4">No stock yet. Add the first batch.</td>
+                            <td colspan="11" class="text-center text-body-secondary py-4">No stock yet. Add the first batch.</td>
                         </tr>
                     }
                     @foreach (var item in Model.Items)
                     {
-                        <tr>
+                        var isLow = Model.LowStockCodes.Contains(item.UniqueCode);
+                        <tr class="@(isLow ? "low-stock" : "")">
                             <td class="fw-medium">@item.UniqueCode</td>
-                            <td>@item.ComponentName</td>
+                            <td>
+                                @item.ComponentName
+                                @if (isLow)
+                                {
+                                    <span class="badge text-bg-danger ms-1">Low stock</span>
+                                }
+                            </td>
                             <td>@item.Brand</td>
                             <td class="text-end">@item.TotalQuantity</td>
                             <td class="text-end">@item.Remaining</td>
@@ -64,3 +81,11 @@
         </div>
     </div>
 </div>
+
+@if (Model.LowStockCodes.Count > 0)
+{
+    <p class="text-body-secondary small mt-2 mb-0">
+        Highlighted rows belong to a component whose combined remaining stock across
+        all of its batches is below the minimum stock alert set in the Master list.
+    </p>
+}

@@ -6,6 +6,11 @@ namespace InventoryManagement.Models;
 /// One row of a category inventory sheet (Electronics_Inventory,
 /// Electrical_Inventory, Tools_Inventory or Modules_Inventory). All four
 /// sheets share the same column layout, so a single model covers them.
+///
+/// Since v2.2 a row represents a single purchased BATCH, not a component: a
+/// component with several purchases owns several rows sharing one UniqueCode,
+/// each with its own invoice, unit cost, supplier and purchase date. Anything
+/// that needs to act on one batch addresses it by <see cref="RowIndex"/>.
 /// </summary>
 public sealed class InventoryItem
 {
