@@ -1,54 +1,72 @@
-# Inventory Management System (GIMS v2.0) — Complete Technical Documentation
+<div align="center">
 
-> **Companion to:** `SRD.md` (System Requirements Document, GIMS v2.0)
-> **Codebase:** `Inventory_MS/` — ASP.NET Core Razor Pages, .NET 10, Google Sheets API v4
-> **Status:** This document describes the system as built after the v2 transformation.
+<!-- Drop the I2ST logo or a screenshot of the app here, e.g.:
+     <img src="wwwroot/img/logo.png" alt="I2ST" width="120" />
+     ![IMS Dashboard](docs/screenshot-dashboard.png)
+-->
+
+# IMS — Inventory Management System
+
+*Internal inventory tracking for I2ST Technologies Pvt. Ltd.*
+
+**Track stock in, stock out and damage — with a Google Spreadsheet as the live database.**
+
+**Version 2.3** &nbsp;·&nbsp; ASP.NET Core Razor Pages (.NET 10) &nbsp;·&nbsp; Google Sheets API v4 &nbsp;·&nbsp; Google Cloud Run
+
+[![.NET](https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet)](https://dotnet.microsoft.com)
+[![Framework](https://img.shields.io/badge/Framework-Razor%20Pages-512BD4)](https://learn.microsoft.com/aspnet/core/razor-pages)
+[![Database](https://img.shields.io/badge/Database-Google%20Sheets%20API%20v4-34A853?logo=google)](https://developers.google.com/sheets/api)
+[![Hosting](https://img.shields.io/badge/Hosting-Google%20Cloud%20Run-4285F4?logo=googlecloud)](https://cloud.google.com/run)
+[![Auth](https://img.shields.io/badge/Auth-Google%20OAuth%202.0-4285F4?logo=google)](https://developers.google.com/identity/protocols/oauth2)
+[![UI](https://img.shields.io/badge/UI-Bootstrap%205.3-7952B3?logo=bootstrap)](https://getbootstrap.com)
+
+</div>
 
 ---
 
 ## Table of Contents
 
-1. [System Overview](#1-system-overview)
+1. [Overview](#1-overview)
 2. [Architecture & Flow Charts](#2-architecture--flow-charts)
 3. [Google Sheets — the Live Database](#3-google-sheets--the-live-database)
 4. [How the Application Works — Module by Module](#4-how-the-application-works--module-by-module)
-5. [Core Components Explained (SRD v2.0, paragraph-wise)](#5-core-components-explained-srd-v20-paragraph-wise)
+5. [Core Business Rules & Invariants](#5-core-business-rules--invariants)
 6. [Conventions & Technical Rules](#6-conventions--technical-rules)
-7. [Deployment on Google Cloud App Engine](#7-deployment-on-google-cloud-app-engine)
-8. [Local Development](#8-local-development)
-9. [Configuration Reference](#9-configuration-reference)
+7. [Project Structure](#7-project-structure)
+8. [Getting Started](#8-getting-started)
+9. [Deployment — Google Cloud Run](#9-deployment--google-cloud-run)
+10. [Version History](#10-version-history)
 
 ---
 
-## 1. System Overview
+## 1. Overview
 
-The **General Inventory Management System (GIMS) v2.0** is an internal web
-application for managing electronic components, electrical components, tools
-& instruments, and modules. It is a *read/write* app — there is no sales or
-billing; it tracks **purchases (stock in), usage (stock out), and damage
-(stock out)**.
+The **Inventory Management System (IMS)** is a production web application used
+internally by **I2ST Technologies Pvt. Ltd.** to manage the electronics,
+electrical components, tools and modules the company works with. It is a
+*read/write* application — there is no sales or billing; it tracks:
 
-The application has **no traditional database**. A **Google Spreadsheet is the
-live database**, accessed through the **Google Sheets API v4**. The server-side
-application (ASP.NET Core Razor Pages) reads rows from the spreadsheet, parses
-them into C# models, performs all business logic (stock math, validation,
-rollback) in memory, and writes changes back as physical rows.
+- **Stock in** — purchases, stored as **batches** with per-batch cost, invoice,
+  supplier and purchase date, enabling accurate historical cost analysis.
+- **Stock out** — component **usage** and **damage**, reported against a
+  specific batch.
+- **Visibility** — remaining quantities per batch, batch-level cost tracking,
+  and low-stock alerts.
 
-Key architectural decisions:
+The application has **no traditional SQL database**. A **Google Spreadsheet is
+the live data store**, accessed through the **Google Sheets API v4**. The
+server-side application reads raw cells, parses them into typed C# models,
+performs all business logic (stock maths, validation, compensating rollback)
+in memory, and writes changes back to the spreadsheet.
 
-- **One spreadsheet, eight tabs** — each tab is a logical "table". Rows are
-  **append-only**; the application **sorts in memory** before displaying
-  (physical order in the sheet is irrelevant).
-- **No SQL, no ORM** — every read is `GET {sheet}!A1:Z1000`, every write is an
-  append, an update of a row range, or a physical row deletion.
-- **Single generic inventory model** — all four category sheets share the
-  exact same 11-column layout, so one C# model (`InventoryItem`) serves all of
-  them. The sheet name is the only thing that differs.
-- **Consistency by rollback** — stock deductions (usage/damage) happen *before*
-  the history record is written. If the history write fails, the deduction is
-  rolled back so the two sheets never drift apart.
-- **No authentication layer** — the app is meant for internal use. Access
-  control is a deployment concern (IAP), not an application concern.
+This design was chosen deliberately: it costs nothing to host at low scale,
+needs no database administration, and lets authorised staff inspect or export
+the raw data directly in Google Sheets.
+
+Access is restricted at the application level: users sign in with **Google
+OAuth 2.0**, and only Google accounts listed in the spreadsheet's
+`AllowedUsers` tab can use the application. The app deploys to **Google Cloud
+Run** and scales to zero.
 
 ---
 
@@ -58,10 +76,10 @@ Key architectural decisions:
 
 ```mermaid
 flowchart LR
-    User[Browser] -->|HTTPS| LB[App Engine Load Balancer<br/>(terminates TLS)]
-    LB -->|Plain HTTP + X-Forwarded headers| AE[App Engine Standard<br/>ASP.NET Core instance]
-    AE -->|HTTPS + OAuth2 token| SHEETS[Google Sheets API v4]
-    SHEETS -->|Spreadsheet ID| SP[(Google Spreadsheet<br/>the database)]
+    User[Browser] -->|HTTPS| LB[Google Cloud Load Balancer<br/>(terminates TLS)]
+    LB -->|Plain HTTP + X-Forwarded headers| CR[Cloud Run<br/>ASP.NET Core instance]
+    CR -->|HTTPS + OAuth2 token| SHEETS[Google Sheets API v4]
+    SHEETS -->|Spreadsheet ID| SP[(Google Spreadsheet<br/>the live database)]
     SP -->|tabs| T1[Master]
     SP -->|tabs| T2[Suppliers]
     SP -->|tabs| T3[Electronics_Inventory]
@@ -70,56 +88,65 @@ flowchart LR
     SP -->|tabs| T6[Modules_Inventory]
     SP -->|tabs| T7[Used_Components]
     SP -->|tabs| T8[Damaged_Components]
-    SA[Service Account key JSON] -.->|credential| AE
+    SP -->|tabs| T9[AllowedUsers]
+    SA[Service account / ADC] -.->|machine credential| CR
     SA -.->|shares the spreadsheet as Editor| SP
 ```
 
 **The request lifecycle:**
 
-1. The browser calls a page URL (`/ElectronicsInventory/Index`, `/Usage/Report`, …).
-2. App Engine's load balancer terminates HTTPS and forwards the request to the
-   ASP.NET Core instance with `X-Forwarded-*` headers. The app trusts these
-   (`UseForwardedHeaders`) so scheme-aware redirects work correctly.
-3. Razor Pages routing (`MapRazorPages`) dispatches to the page model
-   (`.cshtml.cs`). Every page model **constructor-injects the singleton
-   `GoogleSheetsService`**.
+1. The browser calls a page URL. Cloud Run's load balancer terminates TLS and
+   forwards the request with `X-Forwarded-*` headers; the app trusts them
+   (`UseForwardedHeaders`) so scheme-aware redirects work in production.
+2. Authentication middleware verifies the session cookie — an unauthenticated
+   request is challenged to Google's consent screen.
+3. Razor Pages routing dispatches to the page model (`.cshtml.cs`), which
+   constructor-injects the singleton `GoogleSheetsService`.
 4. The page model calls `GetRowsAsync(sheetName)` → the service builds a
-   signed OAuth2 request using the service-account credential → Sheets API
-   returns `IList<IList<object>>` (raw cells) → the page model parses rows into
-   typed models (`MasterItem`, `InventoryItem`, …) via `FromRow`.
-5. The page model applies business logic (sorting, stock math, validation)
-   and re-renders the Razor view, or performs writes (`AppendRowAsync`,
-   `UpdateRowAsync`, `DeleteRowAsync`) and redirects with a `TempData["Success"]`
-   message.
+   signed OAuth2 request → the Sheets API returns raw cells → the page model
+   parses rows into typed models (`MasterItem`, `InventoryItem`, …).
+5. The page model applies business logic (sorting, stock maths, validation)
+   and re-renders the Razor view, or performs a write
+   (`AppendRowAsync` / `UpdateRowAsync` / `DeleteRowAsync`) — serialised
+   through a `SemaphoreSlim` lock — and redirects with a success message.
 
 ### 2.2 Page / Navigation Map
+
+```
+Home · Inventory ▾ (Electronics, Electrical, Tools, Modules)
+     · Transactions ▾ (Report Usage, Usage History | Report Damage, Damage History)
+     · Master · Suppliers · Reports        [right:] Settings · Sign out
+```
 
 ```mermaid
 flowchart TD
     HOME[Home / Dashboard] --> MASTER[Master List]
+    HOME --> SUP[Suppliers]
     HOME --> ELEC[Electronics Inventory]
     HOME --> ELCT[Electrical Inventory]
-    HOME --> TOOLS[Tools & Instruments Inventory]
+    HOME --> TOOLS[Tools Inventory]
     HOME --> MODS[Modules Inventory]
     HOME --> UR[Report Usage]
     HOME --> DR[Report Damage]
+    HOME --> REP[Reports / CSV + ZIP]
+    HOME --> SET[Settings]
 
     MASTER --> M_CREATE[Create Master Item]
     MASTER --> M_EDIT[Edit Master Item]
     MASTER --> M_DEL[Delete Master Item]
 
     ELEC --> E_ADD[Add Stock – Electronics]
-    ELEC --> E_EDIT[Edit Item]
-    ELEC --> E_DEL[Delete Item]
+    ELEC --> E_EDIT[Edit Batch]
+    ELEC --> E_DEL[Delete Batch]
     ELCT --> EL_ADD[Add Stock – Electrical]
-    ELCT --> EL_EDIT[Edit Item]
-    ELCT --> EL_DEL[Delete Item]
+    ELCT --> EL_EDIT[Edit Batch]
+    ELCT --> EL_DEL[Delete Batch]
     TOOLS --> T_ADD[Add Stock – Tools]
-    TOOLS --> T_EDIT[Edit Item]
-    TOOLS --> T_DEL[Delete Item]
+    TOOLS --> T_EDIT[Edit Batch]
+    TOOLS --> T_DEL[Delete Batch]
     MODS --> MO_ADD[Add Stock – Modules]
-    MODS --> MO_EDIT[Edit Item]
-    MODS --> MO_DEL[Delete Item]
+    MODS --> MO_EDIT[Edit Batch]
+    MODS --> MO_DEL[Delete Batch]
 
     UR --> UH[Usage History]
     UH --> UE[Edit Usage Record]
@@ -133,565 +160,506 @@ flowchart TD
 *Note: the four category inventory folders are structurally identical — same
 pages, same logic, only the sheet name differs.*
 
-### 2.3 Business Flow — Add Stock
+### 2.3 Business Flow — Add Stock (batch append)
+
+Every purchase is appended as a **new batch row** — multiple rows may share a
+UniqueCode. Nothing is ever overwritten.
 
 ```mermaid
 flowchart TD
     A[Open Add Stock page] --> B[Load Master items filtered to this category<br/>+ Supplier list]
-    B --> C[User picks component dropdown<br/>'UniqueCode – ComponentName' + qty, invoice,<br/>cost/unit required, supplier, date default today]
+    B --> C[Pick component 'UniqueCode – ComponentName'<br/>+ qty, invoice, cost/unit, supplier,<br/>date defaults to today]
     C --> D{Validation OK?}
     D -->|No| C
-    D -->|Yes| E[Find Master item by UniqueCode]
-    E --> F[Scan category sheet for an existing<br/>row with the same UniqueCode]
-    F -->|Row exists| G[TotalQuantity += qty<br/>Remaining += qty<br/>CostPerUnit, Supplier overwritten<br/>TotalCost = TotalQty x CostPerUnit<br/>UpdateRowAsync]
-    F -->|No row| H[Create InventoryItem seeded from Master<br/>TotalQuantity = Remaining = qty<br/>AppendRowAsync]
-    G --> I[TempData success → redirect to Index]
-    H --> I
+    D -->|Yes| E[Resolve Master item by UniqueCode]
+    E --> F[Build InventoryItem seeded from Master<br/>TotalQuantity = Remaining = Quantity<br/>TotalCost = Quantity × CostPerUnit]
+    F --> G[AppendRowAsync — always a new batch row]
+    G --> H[TempData success → redirect to Index]
 ```
 
-### 2.4 Business Flow — Report Usage (with rollback)
+### 2.4 Business Flow — Report Usage (batch deduction with rollback)
+
+Usage and damage are reported against a **specific batch row**, not against a
+component as a whole.
 
 ```mermaid
 flowchart TD
-    A[Open Report Usage] --> B[Load all 4 category sheets in parallel<br/>keep items with Remaining > 0, grouped by category]
-    B --> C[User picks category + component<br/>(remaining shown as hint), qty, date, remarks]
-    C --> D{ModelState valid?}
+    A[Open Report Usage] --> B[Load batch rows with Remaining > 0,<br/>grouped by category]
+    B --> C[Pick category + batch row<br/>'E-001 – 10k Resistor Date: 2026-07-23, Remaining: 10']
+    C --> D{Validation OK?}
     D -->|No| C
-    D -->|Yes| E{QuantityUsed <= Remaining?}
-    E -->|No| F[Show 'Only N units in stock' error]
-    E -->|Yes| G[Save original row snapshot]
-    G --> H[Remaining -= QuantityUsed<br/>UpdateRowAsync category sheet]
-    H --> I[Build UsedItem record<br/>BatchPurchaseDate = row's DateOfPurchase]
-    I --> J[AppendRowAsync Used_Components]
-    J -->|fails| K[Rollback: restore original row<br/>UpdateRowAsync]
+    D -->|Yes| E{QuantityUsed ≤ batch Remaining?}
+    E -->|No| F[Error 'Only N units in stock']
+    E -->|Yes| G[Re-read the row; verify the RowIndex still<br/>maps to the chosen UniqueCode]
+    G -->|mismatch| H[Refuse — stale row index would<br/>deduct from the wrong component]
+    G -->|match| I[Snapshot the row → Remaining −= qty<br/>UpdateRowAsync]
+    I --> J[Append UsedItem to Used_Components<br/>BatchPurchaseDate = the batch's purchase date]
+    J -->|append fails| K[Rollback: restore the snapshot<br/>and rethrow]
     J -->|succeeds| L[TempData success → redirect to Usage History]
 ```
 
-The **Report Damage** flow is identical, except it writes to
-`Damaged_Components` with extra optional fields (Invoice No., Cost per Unit)
-and the stock check uses `QuantityDamaged`.
+**Report Damage** is identical, except it writes to `Damaged_Components` with
+two extra optional fields (Invoice No., Cost per Unit — each falling back to
+the batch row's value when blank) and checks `QuantityDamaged` instead.
 
 ### 2.5 Business Flow — History Edit / Delete (stock reversal)
 
+Log rows carry no pointer to an inventory row, only UniqueCode and
+BatchPurchaseDate, so the batch is located by matching **both**.
+
 ```mermaid
 flowchart TD
-    A[Edit/Delete a history record] --> B[Load the original record<br/>from Used_Components / Damaged_Components]
-    B --> C[Load the category inventory sheet<br/>via the record's Category + UniqueCode]
-    C --> D{Inventory row found?}
-    D -->|Yes| E[Edit: Remaining += old qty<br/>then validate new qty<br/>Remaining -= new qty]
+    A[Edit or Delete a history record] --> B[Load the record from<br/>Used_Components / Damaged_Components]
+    B --> C[FindBatch: match inventory rows on<br/>UniqueCode + BatchPurchaseDate]
+    C --> D{Batch row found?}
+    D -->|Yes| E[Edit: Remaining += old qty → validate new qty<br/>→ Remaining −= new qty]
     D -->|Yes| F[Delete: Remaining += qty]
-    D -->|No| G[Skip stock adjustment<br/>record still updated/deleted]
-    E --> H[Update history row]
-    F --> I[DeleteRowAsync history sheet]
+    D -->|No| G[Skip the stock adjustment;<br/>the record is still updated / deleted]
+    E --> H[Update the history row]
+    F --> I[DeleteRowAsync on the history sheet]
 ```
 
 ---
 
 ## 3. Google Sheets — the Live Database
 
-One spreadsheet, eight tabs. **Header row is row 1** in every tab. All columns
-in the exact order below. Cells are read as raw objects; numbers come back as
-`double`, empty trailing cells are omitted — every parse goes through safe
-helpers (`SheetCell.SafeInt`, `SheetCell.SafeDecimal`, invariant culture).
+One spreadsheet, **nine tabs**. **Header row is row 1** in every tab; all
+columns are in the exact order below. Cells are read as raw objects (numbers
+come back as `double`, trailing empty cells are omitted) — every parse goes
+through safe helpers (`SheetCell.SafeInt`, `SheetCell.SafeDecimal`,
+invariant culture). Row indexes in code are **1-based and include the header**,
+and that index is the entity ID in URLs.
 
-### 3.1 `Master` — the central catalogue
-
-| # | Column | Notes |
+| # | Tab | Columns |
 |---|---|---|
-| A | UniqueCode | Auto-generated, e.g. `E-001`, `EL-014`, `T-003`, `M-002` |
-| B | ComponentName | Primary display/sort key |
+| 1 | `Master` | UniqueCode, ComponentName, Category, Brand, Description, Unit, MinStockAlert |
+| 2 | `Suppliers` | SupplierName, ContactInfo |
+| 3 | `Electronics_Inventory` | UniqueCode, ComponentName, Brand, TotalQuantity, Remaining, InvoiceNo, CostPerUnit, TotalCost, Supplier, DateOfPurchase, Remarks |
+| 4 | `Electrical_Inventory` | same 11-column layout as #3 |
+| 5 | `Tools_Inventory` | same 11-column layout as #3 |
+| 6 | `Modules_Inventory` | same 11-column layout as #3 |
+| 7 | `Used_Components` | UniqueCode, ComponentName, Category, BatchPurchaseDate, UsedDate, QuantityUsed, Remarks |
+| 8 | `Damaged_Components` | UniqueCode, ComponentName, Category, BatchPurchaseDate, DamageDate, QuantityDamaged, InvoiceNo, CostPerUnit, Remarks |
+| 9 | `AllowedUsers` | Email — access control allow-list |
+
+### 3.1 `Master` — the central catalogue (7 columns)
+
+| Col | Name | Notes |
+|---|---|---|
+| A | UniqueCode | Auto-generated: `E-001`, `EL-014`, `T-003`, `M-002` |
+| B | ComponentName | Primary identifier |
 | C | Category | `Electronics` / `Electrical` / `Tools` / `Modules` |
-| D | Brand | optional |
-| E | Description | optional |
+| D | Brand | Optional |
+| E | Description | Optional |
 | F | Unit | e.g. `pcs`, `meters`, `sets` |
-| G | MinStockAlert | Low-stock threshold used by the dashboard |
+| G | MinStockAlert | Low-stock threshold (default 5) |
 
-### 3.2 `Suppliers`
+### 3.2 `Suppliers` (2 columns)
 
-| # | Column |
-|---|---|
-| A | SupplierName |
-| B | ContactInfo (optional) |
-
-### 3.3 Category sheets — `Electronics_Inventory`, `Electrical_Inventory`, `Tools_Inventory`, `Modules_Inventory`
-
-Identical layout (one model: `InventoryItem`):
-
-| # | Column | Notes |
+| Col | Name | Notes |
 |---|---|---|
-| A | UniqueCode | foreign key → Master.A |
-| B | ComponentName | display-only in edit (comes from Master) |
-| C | Brand | display-only in edit |
-| D | TotalQuantity | purchased quantity |
-| E | Remaining | current stock (≤ TotalQuantity in practice) |
+| A | SupplierName | Sorted alphabetically |
+| B | ContactInfo | Optional |
+
+### 3.3 Category inventory tabs (11 columns each)
+
+`Electronics_Inventory`, `Electrical_Inventory`, `Tools_Inventory`,
+`Modules_Inventory` — identical layout, served by one C# model
+(`InventoryItem`). The sheet name is the only thing that differs.
+
+| Col | Name | Notes |
+|---|---|---|
+| A | UniqueCode | FK → Master |
+| B | ComponentName | From Master, display-only on edit |
+| C | Brand | From Master |
+| D | TotalQuantity | This batch's lifetime intake — never decremented |
+| E | Remaining | Current stock in this batch |
 | F | InvoiceNo | |
-| G | CostPerUnit | **tax-inclusive** |
+| G | CostPerUnit | Tax-inclusive (₹) |
 | H | TotalCost | = TotalQuantity × CostPerUnit, rounded to 2 dp |
-| I | Supplier | picked from the Suppliers sheet |
+| I | Supplier | Picked from the Suppliers sheet |
 | J | DateOfPurchase | `yyyy-MM-dd` |
 | K | Remarks | |
 
-### 3.4 `Used_Components` — usage log
+**Multiple rows may share a UniqueCode — each row is one purchase batch.**
 
-A | UniqueCode | B | ComponentName | C | Category | D | BatchPurchaseDate | E | UsedDate | F | QuantityUsed | G | Remarks
+### 3.4 `Used_Components` — usage log (7 columns)
 
-### 3.5 `Damaged_Components` — damage log
+| Col | Name |
+|---|---|
+| A | UniqueCode |
+| B | ComponentName |
+| C | Category |
+| D | BatchPurchaseDate |
+| E | UsedDate |
+| F | QuantityUsed |
+| G | Remarks |
 
-A | UniqueCode | B | ComponentName | C | Category | D | BatchPurchaseDate | E | DamageDate | F | QuantityDamaged | G | InvoiceNo | H | CostPerUnit | I | Remarks
+### 3.5 `Damaged_Components` — damage log (9 columns)
+
+| Col | Name |
+|---|---|
+| A | UniqueCode |
+| B | ComponentName |
+| C | Category |
+| D | BatchPurchaseDate |
+| E | DamageDate |
+| F | QuantityDamaged |
+| G | InvoiceNo |
+| H | CostPerUnit |
+| I | Remarks |
+
+### 3.6 `AllowedUsers` — access control (1 column)
+
+| Col | Name |
+|---|---|
+| A | Email |
+
+Only the Google accounts listed here may sign in. A missing or unreadable tab
+**denies everyone** — the allow-list fails closed.
 
 ---
 
 ## 4. How the Application Works — Module by Module
 
-### 4.1 Home / Dashboard (`/Index`)
+### 4.1 Authentication & Access Control
 
-Reads the Master sheet and all four category sheets **in parallel**. Each sheet
-failure degrades to an empty list (the dashboard never crashes). It computes:
+```mermaid
+flowchart TD
+    REQ[Visit any page while signed out] --> GOOGLE[Redirected to Google consent screen]
+    GOOGLE -->|signs in and consents| CB[/signin-google callback/]
+    CB --> CHECK{Email in the AllowedUsers tab?<br/>checked before any cookie is written}
+    CHECK -->|Listed| COOKIE[Issue persistent cookie<br/>ims.auth · 14-day sliding expiry]
+    COOKIE --> PAGE[Redirect to the target page]
+    CHECK -->|Not listed| DENY[Sign out → /AccessDenied?email=…<br/>no session is ever created]
+    CB -->|consent failed or cancelled| LOGIN[/Login page/]
+```
 
-- **MasterCount** — items in the Master sheet.
-- **LowStockCount** — a lookup map `UniqueCode → MinStockAlert` is built from
-  Master; then every inventory row across the four category sheets is checked:
-  if its `Remaining < MinStockAlert`, it counts. Items with no Master entry are
-  skipped.
-- Per-category item counts.
+- **Default scheme = cookie, challenge scheme = Google** — an unauthenticated
+  visit goes straight to Google's consent screen.
+- The allow-list check runs in `OnTicketReceived`, **before** the cookie is
+  written, so an unlisted Google account never holds a session.
+- Cookie: name `ims.auth`, HttpOnly, SameSite=Lax, persistent, 14-day
+  **sliding** expiry.
+- Every Razor Page is protected by a fallback authorization policy;
+  `[AllowAnonymous]` on `Login`, `AccessDenied`, `Logout` and `Error`.
+- `AccessControlService` caches the allowed set for **2 minutes** and fails
+  closed — an API error or missing tab denies everyone.
+- **The app refuses to start unconfigured**: `Program.cs` throws if
+  `SpreadsheetId`, `ClientId` or `ClientSecret` is missing, so it can never
+  serve the inventory unprotected.
 
-The page renders stat cards (Master, Low Stock, and one per category) with
-quick links into each inventory, plus shortcut buttons to Report Usage and
-Report Damage.
+### 4.2 Dashboard (`/`)
 
-### 4.2 Master List (CRUD) — `/Master/*`
+Loads the Master sheet and all four category sheets **in parallel**, each in
+its own try/catch so a failing tab degrades to an empty list and the dashboard
+never crashes. It renders five cards:
 
-- **Index** — all rows parsed into `MasterItem`, sorted alphabetically by
-  `ComponentName` (case-insensitive). Table shows Unique Code, Component Name,
-  Category, Brand, Min Stock Alert + Edit/Delete actions.
-- **Create** — form fields: ComponentName (required), Category (dropdown:
-  Electronics / Electrical / Tools / Modules, required), Brand, Unit,
-  MinStockAlert (default 5), Description.
-  **Unique code generation:** the category maps to a prefix (`E-`/`EL-`/`T-`/`M-`),
+- **Master** — items in the catalogue.
+- One card per category — the number of distinct **components**, with the
+  batch-row count and total remaining units beneath it.
+
+(The old "Low Stock" dashboard card was replaced in v2.2 by row highlighting
+on the category pages — see 4.5.)
+
+### 4.3 Master Catalogue (`/Master/*`)
+
+- **Index** — all rows as `MasterItem`, sorted by **UniqueCode ascending**
+  (natural order). Table shows code, name, category, brand, min stock alert,
+  Edit/Delete actions.
+- **Create** — ComponentName (required), Category (dropdown, required),
+  Brand, Unit, MinStockAlert (default 5), Description. The **UniqueCode is
+  generated server-side**: the category maps to a prefix (`E-`/`EL-`/`T-`/`M-`),
   the Master sheet is scanned for the highest numeric suffix already used with
   that prefix, and the new code is `prefix + (max + 1)` zero-padded to three
-  digits (`E-001`, …). Then the row is appended.
-- **Edit** — same form; UniqueCode is read-only (it is the join key to every
-  other sheet, so it cannot change).
-- **Delete** — confirmation page, then physical row deletion.
+  digits (`E-001`, …).
+- **Edit** — UniqueCode is **read-only**: it is the join key to every other
+  sheet and cannot change.
+- **Delete** — confirmation page, then physical row deletion (no cascade).
 
-### 4.3 Suppliers (CRUD) — `/Suppliers/*`
+### 4.4 Suppliers (`/Suppliers/*`)
 
-Straightforward CRUD against the Suppliers sheet, sorted alphabetically by
+Plain CRUD against the `Suppliers` sheet, sorted alphabetically by
 SupplierName. Used everywhere a supplier dropdown appears (Add Stock, Edit).
+Supplier names are denormalised text, so renames do not propagate to existing
+inventory rows.
 
-### 4.4 Category Inventory — `/ElectronicsInventory/*`, `/ElectricalInventory/*`, `/ToolsInventory/*`, `/ModulesInventory/*`
+### 4.5 Category Inventory (`/ElectronicsInventory/*` … `/ModulesInventory/*`)
 
-Each folder has four pages; the four folders differ **only** in sheet name
-(`Electronics_Inventory`, etc.):
+Each folder has four pages; the four folders differ **only** in sheet name:
 
-- **Index** — all rows → `List<InventoryItem>`, sorted by ComponentName.
-  Table: Unique Code, Component Name, Brand, Total Qty, Remaining, Cost/Unit,
-  Total Cost, Supplier, Date, Remarks, Edit/Delete. **"+ Add Stock"** button.
-- **Add Stock** (the only "create" path — stock is always added to a Master
-  component):
-  - Component dropdown populated from the **Master sheet filtered to this
-    category**, displayed as `UniqueCode – ComponentName` (required).
-  - Quantity (required, ≥ 1), Invoice No., **Cost per Unit (required, > 0)**,
-    Supplier (dropdown from Suppliers sheet), Date of Purchase (defaults to
-    today), Remarks.
-  - **On post:** the Master item is resolved; the category sheet is scanned for
-    a row with the same UniqueCode.
-    - **Found** → `TotalQuantity += qty`, `Remaining += qty`, `CostPerUnit` and
-      `Supplier` overwritten with the new batch values, `TotalCost`
-      recalculated, `UpdateRowAsync`.
-    - **Not found** → a new `InventoryItem` is created (ComponentName/Brand
-      seeded from Master, `TotalQuantity = Remaining = Quantity`),
-      `AppendRowAsync`.
-  - Redirect to Index with a `TempData` success message.
-- **Edit** — UniqueCode, ComponentName, Brand are **display-only** (readonly
-  inputs that still round-trip). TotalQuantity, Remaining, InvoiceNo,
-  CostPerUnit, Supplier, DateOfPurchase, Remarks are editable independently.
-  On save: `TotalCost = TotalQuantity × CostPerUnit` (rounded 2 dp) and the row
-  is updated. There is no automatic reconciliation between TotalQuantity and
-  Remaining — the user manages that (the sheet convention is
-  `Remaining ≤ TotalQuantity`).
-- **Delete** — confirmation page, physical row deletion. **No renumbering** —
-  UniqueCode is a real identifier, not a sequence number.
+- **Index** — rows as `List<InventoryItem>`, sorted **UniqueCode ascending,
+  then DateOfPurchase ascending** so a new batch lands directly beneath the
+  earlier batches of the same component.
+- **Add Stock** — the component dropdown is populated from the **Master sheet
+  filtered to this category**, shown as `UniqueCode – ComponentName`
+  (required), plus quantity (≥ 1), invoice no., **cost per unit (required,
+  > 0)**, supplier, date of purchase (defaults to today) and remarks.
+  **The submission always appends a new row** — see flow 2.3. Each row is a
+  batch; no upsert, no overwrite.
+- **Edit** — UniqueCode, ComponentName and Brand are display-only;
+  TotalQuantity, Remaining, InvoiceNo, CostPerUnit, Supplier, DateOfPurchase
+  and Remarks are editable. On save, `TotalCost = TotalQuantity ×
+  CostPerUnit` is recalculated server-side. `Remaining` stays hand-editable as
+  the stock-correction escape hatch.
+- **Delete** — confirmation page, physical batch-row deletion.
 
-### 4.5 Report Usage — `/Usage/Report`
+**Low-stock highlighting.** Rows carry a `low-stock` CSS class plus a badge
+when the component's **combined remaining across all batches** falls below its
+Master `MinStockAlert` threshold (default 5). The comparison uses the total,
+not the individual row — otherwise every nearly-exhausted batch would light up
+even when a full batch sits beneath it. The alert appears right where stock is
+managed, not buried in a dashboard number.
 
-- Category dropdown (Electronics / Electrical / Tools / Modules). All four
-  category sheets are loaded in `OnGet` and the view renders **one select per
-  category**, showing only items with `Remaining > 0`, labelled
-  `UniqueCode – ComponentName (Remaining: N)`. A small JavaScript toggle shows
-  the select of the chosen category and a hint line with available stock
-  (client-side convenience; the real check is server-side).
-- Fields: QuantityUsed (required, ≥ 1), UsedDate (defaults to today), Remarks.
-- **On post (server-side validation, in order):**
-  1. Map category → sheet name (`InventoryItem.SheetNameFor`); reject invalid.
-  2. Re-load the category list fresh (so validation uses current stock).
-  3. Find the item by UniqueCode; fail if gone.
-  4. **Fail if `QuantityUsed > Remaining`** (with a message stating available
-     stock).
-  5. Snapshot the original row; `Remaining -= QuantityUsed`;
-     `UpdateRowAsync`.
-  6. Build the `UsedItem` (`BatchPurchaseDate` = the inventory row's
-     `DateOfPurchase`) and `AppendRowAsync` to `Used_Components`.
-  7. **If the append throws → restore the original row (rollback) and rethrow.**
-  8. Success TempData → redirect to Usage History.
+### 4.6 Report Usage (`/Usage/Report`) & Report Damage (`/Damage/Report`)
 
-### 4.6 Usage History — `/Usage/History` (+ Edit / Delete)
+- Category dropdown; the view renders **one select per category** listing
+  **individual batch rows** with `Remaining > 0`, labelled
+  `E-001 – 10k Resistor (Date: 2026-07-23, Remaining: 10)`.
+- Options are ordered UniqueCode ascending then DateOfPurchase ascending, so
+  taking the first match consumes **oldest stock first**.
+- The option value is **`rowIndex|uniqueCode`**. The RowIndex drives the
+  deduction; the code is re-checked against the row found after a fresh read,
+  because a stale index can point at a different component after rows above it
+  are deleted — on mismatch the submission is refused with an explanation.
+- **Server-side sequence** (see flow 2.4): validate category → resolve batch →
+  reject if quantity > that batch's Remaining → snapshot the row → decrement
+  and write → append the log row with `BatchPurchaseDate = DateOfPurchase` →
+  **on append failure, restore the snapshot (compensating rollback)**.
+- Damage additionally captures InvoiceNo and CostPerUnit, each falling back to
+  the batch row's value when blank.
+- `TotalQuantity` is **never** decremented — it is lifetime intake.
 
-- **History** — all rows from `Used_Components`, sorted by ComponentName
-  (ascending), then **UsedDate descending**. Columns: Unique Code, Component
-  Name, Category, Batch Purchase Date, Used Date, Qty Used, Remarks,
-  Edit/Delete.
-- **HistoryEdit** (`/Usage/HistoryEdit?id=N`) — edits UsedDate, QuantityUsed,
-  Remarks only; the rest are display-only. **If the quantity changed:** the old
-  quantity is added back to the inventory row (`Remaining += old`), then the
-  new quantity is validated against the restored stock and deducted
-  (`Remaining -= new`). If validation fails, nothing is written and an error is
-  shown. If the inventory row no longer exists, the stock adjustment is skipped
-  but the record is still saved.
-- **HistoryDelete** — confirmation page. On confirm: `Remaining +=
-  QuantityUsed` on the inventory row (if it still exists), then
-  `DeleteRowAsync` the history row.
+### 4.7 Usage / Damage History (`/Usage/History`, `/Damage/History` + Edit/Delete)
 
-### 4.7 Report Damage — `/Damage/Report`
+- Sorted **UniqueCode ascending, then date descending**.
+- **HistoryEdit** — quantity, date and remarks are editable; code, name,
+  category and batch date are read-only. If the quantity changed: the old
+  quantity is added back to the batch's Remaining, the new quantity is
+  validated against the restored figure and deducted, then the log row is
+  updated. If the batch row is gone, the adjustment is skipped but the record
+  is still saved.
+- **HistoryDelete** — adds the quantity back to the batch, then removes the
+  log row.
+- Both locate the batch with `FindBatch(rows, code, batchPurchaseDate)` —
+  matching on both fields, falling back to the first row with the same code
+  when the original batch row has been deleted.
 
-Identical mechanics to Report Usage (deduct → append with rollback), with:
+### 4.8 Reports (`/Reports`)
 
-- `QuantityDamaged` validated against `Remaining`.
-- Extra **optional** fields: Invoice No. (falls back to the inventory row's
-  invoice if blank) and Cost per Unit (falls back to the inventory row's unit
-  cost if left at 0).
-- Writes to `Damaged_Components`.
+Eight live downloads (Master, four category inventories, Suppliers, Usage,
+Damage) plus **Download All (ZIP)** — `?handler=Csv&key=…` and
+`?handler=Zip`.
 
-### 4.8 Damage History — `/Damage/History` (+ Edit / Delete)
+- Every download reads the sheet **live**; nothing is cached or precomputed.
+- Ragged rows (the Sheets API drops trailing empty cells) are padded to the
+  widest row so columns stay aligned.
+- Fields are quoted only when they contain a comma, quote, newline or edge
+  whitespace; embedded quotes are doubled.
+- **UTF-8 with BOM** — without it, Excel mangles `₹` and other non-ASCII text.
+- The `key` parameter resolves through an allow-list, so the handler cannot be
+  pointed at an arbitrary tab.
+- In the ZIP a missing tab is skipped rather than failing the archive.
+- Filenames: `<SheetName>_<yyyy-MM-dd>.csv`, archive
+  `InventoryReports_<date>.zip`.
 
-Same as Usage History but for `Damaged_Components`; sort by ComponentName,
-then **DamageDate descending**. Edit/Delete reverse the stock exactly like the
-usage pages.
+### 4.9 Settings (`/Settings`)
+
+Account name and email from the Google profile claims, sign-out (a POST form,
+so a stray link or prefetch cannot end a session), and a **light/dark theme
+switcher** with a live preview. The theme is stored in `localStorage` and
+mirrored to a cookie, then applied by an inline `<head>` script before first
+paint — no flash of the wrong theme on load. Implemented with Bootstrap 5.3's
+`data-bs-theme`; the navbar stays dark in both themes.
 
 ---
 
-## 5. Core Components Explained (SRD v2.0, paragraph-wise)
+## 5. Core Business Rules & Invariants
 
-This section walks through the SRD's core modules and explains, for each one,
-what it requires and exactly how the codebase delivers it.
-
-### 5.1 Dashboard
-
-**SRD:** an at-a-glance summary of inventory health — total items, low-stock
-alerts, stock value.
-
-**Implementation:** `Pages/IndexModel` fires five `GetRowsAsync` calls in
-parallel (Master + four category sheets). From the Master rows it builds a
-`Dictionary<UniqueCode, MinStockAlert>`; every inventory row in every category
-sheet whose `Remaining < MinStockAlert` increments `LowStockCount`. That single
-number is the SRD's "low-stock alert", computed live on every page load — no
-background jobs, no cached values, so it can never go stale. The dashboard also
-counts Master items and per-category items, and the view turns these into
-Bootstrap cards with links. One SRD nuance: the SRD also mentions *total stock
-value*; the per-category sheets store `TotalCost` per row, so the data for a
-sum already exists — a future enhancement can add `Σ TotalCost` to the
-dashboard without touching the schema.
-
-### 5.2 Product Management (Master)
-
-**SRD:** central catalogue of all items — unique code, name, category, brand,
-description.
-
-**Implementation:** `MasterItem` maps to the `Master` tab. Its `FromRow`/`ToRow`
-pair is the boundary: `FromRow` turns raw sheet cells into a typed object using
-the invariant-culture safe parsers (`SheetCell`), `ToRow` produces the exact
-7-cell list that `AppendRowAsync`/`UpdateRowAsync` write back — this keeps
-column-order mistakes impossible to introduce silently. The UniqueCode is the
-SRD's "unique code": generated on Create from a per-category prefix plus the
-highest existing suffix + 1 (padded to 3 digits), and treated as **immutable**
-thereafter (read-only in Edit) because it is the foreign key joining Master to
-every category sheet, the usage log, and the damage log. Everything else
-(ComponentName, Category, Brand, Description, Unit, MinStockAlert) is freely
-editable. Delete is a confirmed physical row removal.
-
-### 5.3 Category Management
-
-**SRD:** grouping items into logical types; deliberately *no separate Category
-sheet* — category is a column in Master.
-
-**Implementation:** the SRD's design decision is honored exactly. The four
-category names are constants on `InventoryItem` (`Electronics`, `Electrical`,
-`Tools`, `Modules`), and two static mappers concentrate all the category
-knowledge in one place: `SheetNameFor(category)` (→ `Electronics_Inventory`,
-…) and `CodePrefixFor(category)` (→ `E-`, `EL-`, `T-`, `M-`). Every page that
-needs category logic — Master Create (code generation), the four Add Stock
-pages (Master filtering), Usage/Damage reports (sheet resolution) — goes
-through these two methods, so a future fifth category is a two-line change in
-one file plus a new sheet tab.
-
-### 5.4 Supplier Management
-
-**SRD:** list of approved suppliers; dropdowns elsewhere validated against
-this list.
-
-**Implementation:** the `Suppliers` tab + `Supplier` model (SupplierName,
-ContactInfo) with full CRUD, sorted by name. Add Stock and inventory Edit both
-populate their supplier dropdown from this sheet. The SRD says fields "use
-dropdowns validated against this list" — the Edit page is deliberately
-defensive here: if an existing inventory row references a supplier that was
-since deleted from the Suppliers sheet, that name is injected back into the
-dropdown options so the row can still be saved without silently losing data.
-The app does **not** hard-reject an unknown supplier string on save (records
-may predate the dropdown), but the UI never offers one.
-
-### 5.5 Inventory / Stock Management
-
-**SRD:** tracking quantities across category sheets and all movements (in,
-out, damaged).
-
-**Implementation:** the heart of the system is the write path, not the schema.
-Every stock mutation is a **read-modify-write** against the row's physical
-index (`RowIndex`, 1-based, header included):
-`Remaining` is decremented only after a server-side availability check, and the
-*new* stock values are written back through `UpdateRowAsync` with the *same*
-row address used for the read — no offsets, no lookups by name. Stock *in* is
-Add Stock (increment + cost/supplier overwrite); stock *out* is Usage and
-Damage reports. Because Add Stock guarantees **at most one row per
-UniqueCode** in a category sheet (found → update, missing → append), all
-later lookups (usage, damage, history rollback) can safely locate a row by
-UniqueCode alone. Physical deletion of inventory rows is allowed but history
-rollbacks handle the case where the row is gone.
-
-### 5.6 Transaction History
-
-**SRD:** audit trail of all stock reductions, with edit/delete and rollback.
-
-**Implementation:** two append-only logs: `Used_Components` (`UsedItem`) and
-`Damaged_Components` (`DamagedItem`). Each record is a **self-contained
-snapshot**: UniqueCode, ComponentName, Category, BatchPurchaseDate (copied from
-the inventory row at the time of the movement), the movement date, and the
-quantity. Because the record carries its own Category and UniqueCode, an edit
-or delete can locate the source inventory row *without* any join machinery.
-The rollback protocol is two-sided: (a) **write-side** — if appending the log
-record fails after the stock was deducted, the original row bytes are restored;
-(b) **history-edit/delete-side** — quantities are added back to stock before
-the new quantity is re-deducted (edit) or the record is removed (delete),
-always validated against the restored stock level. This satisfies the SRD's
-"audit trail" requirement while keeping the two sheets consistent by
-construction.
-
-### 5.7 Supporting infrastructure (not modules, but load-bearing)
-
-- **`GoogleSheetsService`** (singleton) — the only class allowed to touch the
-  Sheets API. It serializes every write with a `SemaphoreSlim` (so concurrent
-  requests can never interleave a read-modify-write), caches tab IDs for row
-  deletion, and exposes five operations: `GetRowsAsync` (read all), 
-  `AppendRowAsync` (returns the new 1-based row index), `UpdateRowAsync`
-  (overwrite a row range), `DeleteRowAsync` (physical `DeleteDimension`
-  removal — deliberately **no** renumbering, since column A is UniqueCode, not
-  Sl.No.), and `GetCellValueAsync`. Page models never build Sheets requests
-  themselves.
-- **Models layer** — pure POCOs with `FromRow`/`ToRow`, `[Display]` labels and
-  `[Range]`/`[Required]` validation attributes. `InventoryItem.RecalculateCosts()`
-  is the *only* cost formula in the system (tax-inclusive:
-  `TotalCost = Round(TotalQuantity × CostPerUnit, 2)`), per the SRD's "no GST"
-  decision.
-- **Page models + views** — constructor injection everywhere; `OnGet` loads,
-  `OnPost` validates (`ModelState`) then writes then redirects with
-  `TempData["Success"]`; every `FindAsync` guards against stale row indexes.
-- **Rollback helpers** — `Fail(message)` adds a model error and re-renders;
-  the usage/damage report flows snapshot `item.ToRow()` before mutating and
-  restore it in a `catch`.
+1. **Row indexes are 1-based and include the header**; `RowIndex` is the URL
+   id. A row at list position `i` lives at sheet row `i + 1`.
+2. **UniqueCode is immutable** once created and is the join key across Master,
+   the four category tabs, the usage log and the damage log.
+3. **Costs are tax-inclusive** (₹, no GST columns).
+   `TotalCost = Round(TotalQuantity × CostPerUnit, 2)` is computed
+   server-side, never accepted from a form.
+4. **Physical rows are append-only.** Add Stock always appends a batch row; all
+   ordering happens in LINQ within the page models — never in the service,
+   never in the sheet.
+5. **Deletes never renumber** — deletion is a physical row removal; UniqueCode
+   is an identifier, not a sequence number.
+6. **Every write is serialised** through `GoogleSheetsService._writeLock`
+   (a `SemaphoreSlim`), so concurrent requests cannot interleave on the
+   spreadsheet.
+7. **Stock deductions are rollback-protected** — a usage/damage log append
+   failure restores the original row snapshot.
+8. **History edits/deletes reverse stock transactionally** — the original
+   quantity is added back before the new quantity is deducted (edit) or the
+   record is removed (delete).
+9. **Low-stock compares totals across batches**, not individual rows, against
+   the Master threshold (fallback 5).
+10. **Money is `decimal`**, parsed and formatted with `InvariantCulture`,
+    displayed as `₹ N2`. **Dates are plain `yyyy-MM-dd` strings**, never typed
+    dates; date inputs default to today.
 
 ---
 
 ## 6. Conventions & Technical Rules
 
-- **Row indexes are 1-based and include the header** (row 1 = header). A row
-  at list position `i` (0-based, skipping the header) lives at index `i + 1`.
-- **Dates** are stored and displayed as `yyyy-MM-dd` strings; date inputs
-  default to today.
-- **Money** is `decimal`, formatted `₹ N2` with `InvariantCulture`; parsing is
-  `InvariantCulture` (`NumberStyles.Any`).
-- **Sorting** happens only in page models (LINQ `OrderBy`), never in the
-  service, never in the sheet.
 - **Sheet names (exact):** `Master`, `Suppliers`, `Electronics_Inventory`,
   `Electrical_Inventory`, `Tools_Inventory`, `Modules_Inventory`,
-  `Used_Components`, `Damaged_Components`. The old tabs (`PCB_Inventory`,
-  `Panel_Inventory`, `Damages_Components`) must be removed/replaced.
+  `Used_Components`, `Damaged_Components`, `AllowedUsers`. The legacy tabs
+  (`PCB_Inventory`, `Panel_Inventory`, `Damages_Components`) are gone.
 - **UniqueCode prefixes:** `E-` Electronics, `EL-` Electrical, `T-` Tools,
   `M-` Modules; numeric suffix zero-padded to 3 digits.
-- **One row per UniqueCode per category sheet** (enforced by Add Stock).
+- **Category → tab mapping** lives in two static methods on `InventoryItem` —
+  `SheetNameFor(category)` and `CodePrefixFor(category)` — so a future fifth
+  category is a two-line change plus a new tab.
+- **Sorting rules:** Master and category tabs by UniqueCode ascending (natural
+  order, `UniqueCodeComparer`); category tabs secondarily by DateOfPurchase
+  ascending; history by UniqueCode ascending then date descending; Suppliers
+  alphabetically by name.
 - **Nullable reference types and implicit usings are enabled**; the project
   targets `net10.0`.
+- **`GoogleSheetsService` is the only class allowed to touch the Sheets API**;
+  page models never build Sheets requests themselves.
+- The project builds clean: **0 errors, 2 warnings** (both pre-existing:
+  an obsolete `ForwardedHeadersOptions.KnownNetworks` and an obsolete
+  `GoogleCredential.FromFile` overload).
 
 ---
 
-## 7. Deployment on Google Cloud App Engine
-
-> Note: the checked-in `app.yaml` is **out of date** and is being reworked as
-> part of the current deployment effort. The *interaction model* below is what
-> the code requires; exact file paths/secret ids must match whatever the new
-> `app.yaml` declares.
-
-### 7.1 The actors and how they relate
+## 7. Project Structure
 
 ```
-GCP Project
-├── App Engine (Standard, aspnetcore runtime)   ← runs the .NET app
-├── Service Account "inventory-sa"              ← machine identity
-│   ├── JSON key  → stored in Secret Manager  → mounted as a volume
-│   └── email     → added as EDITOR on the Google Spreadsheet
-└── Secret Manager "SERVICE_ACCOUNT_KEY"        ← holds the key JSON
+Inventory_MS/
+├─ Inventory_MS.csproj          .NET 10, nullable + implicit usings
+├─ Program.cs                   Startup, auth, DI, Cloud Run binding
+├─ appsettings.json             Config placeholders (secrets via env vars)
+├─ Models/
+│  ├─ AllowedUser.cs            Access control model
+│  ├─ DamagedItem.cs            Damage log row
+│  ├─ InventoryItem.cs          Category inventory row (all four tabs)
+│  ├─ MasterItem.cs             Master catalogue row
+│  ├─ SheetCell.cs              Safe cell-parsing helpers
+│  ├─ Supplier.cs               Supplier row
+│  ├─ UniqueCodeComparer.cs     Natural-order code sorting
+│  └─ UsedItem.cs               Usage log row
+├─ Services/
+│  ├─ AccessControlService.cs   AllowedUsers lookup (cached, fail-closed)
+│  ├─ GoogleSheetsService.cs    All Sheets API calls (singleton, write lock)
+│  └─ StockAlerts.cs            Low-stock threshold logic
+├─ Pages/
+│  ├─ Index                     Dashboard
+│  ├─ Login / AccessDenied / Logout
+│  ├─ Reports                   CSV / ZIP export
+│  ├─ Settings                  Account, theme, preferences
+│  ├─ Master/ · Suppliers/      CRUD
+│  ├─ {Electronics|Electrical|Tools|Modules}Inventory/
+│  │                            Index, AddStock, Edit, Delete
+│  ├─ Usage/ · Damage/          Report, History, HistoryEdit, HistoryDelete
+│  └─ Shared/                   Layouts, partials, theme head
+└─ wwwroot/                     CSS, JS, images (I2ST logo), Bootstrap + jQuery libs
 ```
-
-1. **You** create a service account in Google Cloud (IAM & Admin → Service
-   Accounts) and download its **JSON key**. This key is a machine identity:
-   it contains a private key that lets the app sign requests as that
-   service account.
-2. **You** share the spreadsheet with the **service-account email address**
-   as **Editor** (spreadsheet → Share → paste `inventory-sa@<project>.iam.gserviceaccount.com`).
-   This is the single most common deployment failure: the app code is correct
-   but the sheet's ACL doesn't include the service account, so every read
-   returns 403.
-3. **You** store the key JSON in **Secret Manager** as a secret
-   (e.g. `SERVICE_ACCOUNT_KEY`), so the key never lives in the repo.
-4. **App Engine** mounts the secret as a **read-only volume** (see `app.yaml`:
-   `secret_volumes` + `volume_mounts`, e.g. mounted at `/var/secrets/google`).
-   Files inside a secret volume are named after the **secret id**.
-5. The app reads the mounted path from the **`GOOGLE_APPLICATION_CREDENTIALS`**
-   environment variable (set in `app.yaml` `env_variables`).
-6. At startup, `Program.cs` also reads **`SpreadsheetId`** (env var first, then
-   config) and **throws if it is missing** — the app refuses to boot without
-   knowing which spreadsheet to use.
-7. `GoogleSheetsService.LoadCredential()` resolves the credential:
-   - **If `GOOGLE_APPLICATION_CREDENTIALS` points to a file that exists** →
-     `GoogleCredential.FromFile(path).CreateScoped(SheetsService.Scope.Spreadsheets)`
-     (i.e. "act as this service account").
-   - **Otherwise** → Application Default Credentials
-     (`GetApplicationDefaultAsync()`), which on App Engine is the project's
-     **default App Engine service account** automatically. This is the fallback
-     that lets the app run even without an explicit key mount.
-8. Every Sheets call is then an HTTPS request **signed with an OAuth2 token
-   minted from that key**, targeting `SheetsService.Scope.Spreadsheets`
-   (`https://www.googleapis.com/auth/spreadsheets`), addressed by the
-   `SpreadsheetId`.
-
-### 7.2 Why App Engine (Standard, aspnetcore) works here
-
-- The app is a stateless web frontend + a thin API client; App Engine Standard
-  scales instances from zero, fits the free-tier budget, and terminates TLS at
-  the load balancer. The app is configured to trust the forwarded headers
-  (`X-Forwarded-Proto`, `X-Forwarded-For`) so `UseHttpsRedirection` and
-  scheme-aware redirects behave in production (`Program.cs` clears the known
-  proxy lists — on App Engine the load balancer IPs are dynamic).
-- In production, unhandled exceptions go to `/Error` (`UseExceptionHandler`).
-- `ASPNETCORE_ENVIRONMENT=Production` is set in `app.yaml`.
-
-### 7.3 Prerequisites (one-time)
-
-```powershell
-# 0) gcloud auth login + set the project
-gcloud config set project <PROJECT_ID>
-
-# 1) Create the secret from your downloaded key (if not already done)
-gcloud secrets create SERVICE_ACCOUNT_KEY --data-file=service-account-key.json
-
-# 2) Grant the App Engine default service account read access to the secret
-gcloud secrets add-iam-policy-binding SERVICE_ACCOUNT_KEY `
-  --member="serviceAccount:<PROJECT_ID>@appspot.gserviceaccount.com" `
-  --role="roles/secretmanager.secretAccessor"
-```
-
-### 7.4 The app.yaml contract (what the code expects)
-
-Whatever the new `app.yaml` ends up as, it must provide:
-
-| Requirement | How the code consumes it |
-|---|---|
-| `SpreadsheetId` env var | `Program.cs` → `builder.Configuration`; boot fails without it |
-| `GOOGLE_APPLICATION_CREDENTIALS` env var | points to the mounted secret file; if unset/unfound → ADC fallback |
-| Secret volume mount + read access | `LoadCredential` uses `File.Exists` on the path |
-| The spreadsheet shared with the key's service-account email (Editor) | every `GetRowsAsync`/write would 403 otherwise |
-
-Suggested shape (adjust secret id / mount path to your new file):
-
-```yaml
-runtime: aspnetcore
-env: standard
-instance_class: B1
-
-secret_volumes:
-  - mount_path: /var/secrets/google
-    name: service-account-key
-    secret_id: SERVICE_ACCOUNT_KEY
-    version: latest
-
-env_variables:
-  SpreadsheetId: "<YOUR_SPREADSHEET_ID>"
-  ASPNETCORE_ENVIRONMENT: "Production"
-  GOOGLE_APPLICATION_CREDENTIALS: "/var/secrets/google/SERVICE_ACCOUNT_KEY"
-```
-
-> Files inside a secret volume are named after the **secret id** — if your
-> secret is not named `SERVICE_ACCOUNT_KEY`, the credentials path must match.
-
-### 7.5 Deploy
-
-```powershell
-cd C:\e\Projects\Inventory_Management\Inventory_MS
-gcloud app deploy app.yaml
-gcloud app browse        # open the deployed URL
-```
-
-Deployment notes:
-
-- `gcloud app deploy` uploads the source directory; `bin/`, `obj/` should be
-  excluded (`.gcloudignore` / `.gitignore`).
-- If you change only config, `gcloud app deploy --no-promote` lets you smoke
-  test a new version before routing traffic.
-- **Access control:** the app has no login. If the deployed URL is publicly
-  reachable, protect it with **Identity-Aware Proxy (IAP)** before going live,
-  or restrict App Engine traffic to your network.
-- **Troubleshooting matrix:**
-  - *403 "The caller does not have permission"* → spreadsheet not shared with
-    the service account (or wrong service account key mounted).
-  - *"Tab 'X' was not found"* → the spreadsheet still has old tab names;
-    rename/create the eight tabs exactly.
-  - *Boot exception "SpreadsheetId is not configured"* → env var missing from
-    `app.yaml`.
-  - *Secrets mount fails* → the App Engine service account lacks
-    `roles/secretmanager.secretAccessor` (step 7.3).
 
 ---
 
-## 8. Local Development
+## 8. Getting Started
+
+### 8.1 Prerequisites
+
+1. A Google Cloud project with the **Sheets API** enabled.
+2. A Google Spreadsheet with **all nine tabs** named exactly as in the schema
+   (section 3), header row in row 1 — including the `AllowedUsers` tab with
+   header `Email` and one address per row. An empty or unreadable allow-list
+   denies everyone by design.
+3. The spreadsheet shared as **Editor** with the service account the app runs
+   as (on Cloud Run: the Compute Engine default,
+   `<project-number>-compute@developer.gserviceaccount.com`). Sharing the
+   spreadsheet covers all nine tabs.
+4. An **OAuth 2.0 Web application client** (this is **not** the service
+   account — two separate credentials) with `<base-url>/signin-google`
+   registered as an authorised redirect URI for every host, e.g.:
+   ```
+   https://localhost:62251/signin-google
+   https://inventory-ms-xxxxxxxx-uc.a.run.app/signin-google
+   ```
+   Consent screen scopes: `email`, `profile`.
+
+### 8.2 Local development
 
 ```powershell
-cd C:\e\Projects\Inventory_Management\Inventory_MS\Inventory_MS
+cd Inventory_MS\Inventory_MS
 
-# Point the app at your spreadsheet (dev machine only)
+# Set secrets (one time)
 dotnet user-secrets set SpreadsheetId "<spreadsheet-id>"
+dotnet user-secrets set "Authentication:Google:ClientId" "<client-id>"
+dotnet user-secrets set "Authentication:Google:ClientSecret" "<client-secret>"
 
-# Credentials: either an env var pointing at the downloaded key, or ADC
+# Point at your service-account key (or rely on Application Default Credentials)
 $env:GOOGLE_APPLICATION_CREDENTIALS = "C:\path\to\service-account-key.json"
-# or: gcloud auth application-default login
 
+# Build and run
+dotnet build    # expect 0 errors, 2 pre-existing warnings
 dotnet run
 ```
 
-The same credential-resolution logic applies locally: if the key file exists
-at the configured path it is used; otherwise ADC is used. The spreadsheet must
-still be shared with whatever identity the app authenticates as (service
-account email, or your own Google account via ADC).
+The app listens on `http://localhost:8080` (or the `PORT` env var). Add
+`https://localhost:<port>/signin-google` to the OAuth client's redirect URIs.
+
+### 8.3 Configuration reference
+
+| Variable | Source | Required |
+|---|---|---|
+| `SpreadsheetId` | env / appsettings / user-secrets | Yes — startup throws |
+| `Authentication:Google:ClientId` (or `GoogleClientId`) | env / config | Yes — startup throws |
+| `Authentication:Google:ClientSecret` (or `GoogleClientSecret`) | env / config | Yes — startup throws |
+| `GOOGLE_APPLICATION_CREDENTIALS` | env | No — falls back to ADC |
+| `PORT` | env (Cloud Run) | No — defaults to 8080 |
 
 ---
 
-## 9. Configuration Reference
+## 9. Deployment — Google Cloud Run
 
-| Key | Source | Required | Used for |
-|---|---|---|---|
-| `SpreadsheetId` | env var → appsettings.json → User Secrets | Yes (boot fails without it) | addressing the spreadsheet in every Sheets call |
-| `GOOGLE_APPLICATION_CREDENTIALS` | env var → appsettings.json | No (ADC fallback) | path to the service-account JSON key |
-| `ASPNETCORE_ENVIRONMENT` | env var / app.yaml | Recommended | Production error handling |
+```bash
+gcloud run deploy inventory-ms --source . --region us-central1 \
+  --allow-unauthenticated \
+  --set-env-vars SpreadsheetId=<spreadsheet-id> \
+  --set-env-vars GoogleClientId=<client-id> \
+  --set-env-vars GoogleClientSecret=<client-secret>
+```
 
-The service is registered once in `Program.cs`:
-`AddSingleton(new GoogleSheetsService(spreadsheetId, credentialsPath ?? ""))`
-— a single instance is shared by all requests, which is also why the service
-serializes writes with its internal lock.
+- `--allow-unauthenticated` is correct: Cloud Run admits the request, and the
+  **application** enforces sign-in against `AllowedUsers`.
+- Consider `--set-secrets` (Secret Manager) for the client secret.
+- TLS is terminated at Google's load balancer; the app trusts forwarded
+  headers, so OAuth redirect URIs are generated as `https` even though the
+  container sees plain HTTP.
+- The app boots with Application Default Credentials — no key file is needed
+  in production.
+
+### Troubleshooting
+
+| Symptom | Likely cause |
+|---|---|
+| 403 "caller does not have permission" on every read | Spreadsheet not shared with the service account, or the wrong account is running the app |
+| Sign-in loop after consent | `<base-url>/signin-google` missing from the OAuth client's redirect URIs |
+| Startup exception "…is not configured" | `SpreadsheetId` / client credentials not set on the service |
+| Everyone is denied even when signed in | `AllowedUsers` tab missing, renamed, or empty — it fails closed |
+
+---
+
+## 10. Version History
+
+| Version | Date | Highlights |
+|---|---|---|
+| **2.3** | 2026-08-20 | I2ST Technologies Pvt. Ltd. branding — logo, "I2ST IMS" title, footer |
+| **2.2** | 2026-08-18 | Google OAuth + allow-list auth, multi-batch stock, CSV/ZIP reports, Settings page with dark/light theme, low-stock row highlighting, UniqueCode sorting, navbar redesign |
+| **2.0** | 2026-08-12 | Complete rewrite: 8-tab schema, UniqueCode system, Master/Suppliers CRUD, Usage/Damage with rollback, generic InventoryItem model, .NET 10, Cloud Run |
+| **1.0** | 2026-08-08 | Initial build: PCB/Panel/Tools, Sl.No. rows, GST columns, App Engine |
+
+---
+
+<div align="center">
+  <strong>Inventory Management System</strong> · I2ST Technologies Pvt. Ltd. © 2026
+</div>
